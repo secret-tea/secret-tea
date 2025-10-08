@@ -1,16 +1,50 @@
 <p align="center">
-  <picture>
-    <img alt="tea secrets" src="">
-  </picture>
-  <h2 align="center">Tea</h2>
-  <p align="center">Scan your workspace for secrets!</p>
+  <h2 align="center">Project Tea</h2>
+	<div align="center">
+		<img src="assets/images/logo.png" width="150"/>
+	</div>
+  <p align="center">No tea will be spilled today</p>
 </p>
+  
 
 
-## Mô tả dự án
-Dự án phát triển một tiện ích mở rộng cho VS Code giúp phát hiện thông tin nhạy cảm và thư viện có nguy cơ bảo mật trong mã nguồn.
+## Tổng quan dự án
+Dự án phát triển một tiện ích mở rộng cho VSCode cung cấp:
+- Quét mã nguồn để phát hiện thông tin nhạy cảm như password, API key, token bên trong git repos, files.
+- Phân tích toàn bộ lịch sử git commit để phát hiện các thông tin nhạy cảm đã bị lộ.
+- Cảnh báo về các thư viện độc hại hoặc có nguy cơ lỗ hỏng bảo mật
+- Giao diện thân thiện tích hợp trong VS Code để hiển thị kết quả scan và cảnh báo.
 
-Chúng tôi không muốn "Reinvent the wheel" mà muốn tận dụng các công cụ quét secret hiện có và dữ liệu về malware để xây dựng một hệ thống quét mã nguồn hiệu quả và dễ sử dụng ngay trong VS Code, hỗ trợ các nhà phát triển phần mềm nâng cao bảo mật cho dự án của họ ngay từ giai đoạn phát triển.
+#### Lý do phát triển
+Chắc chắn trên thị trường đã có nhiều công cụ hỗ trợ tương tự được phổ biến và phát triển từ rất lâu vậy nên chúng tôi không muốn "Reinvent the wheel" mà muốn tận dụng dụng những công nghệ đã có sẵn để nâng cao hơn trải nghiệm của lập trình viên lên một bước mới với việc tích hợp trực tiếp vào IDE, không cần phải setup phức tạp, không cần phải chạy lệnh thủ công, không cần phải chuyển đổi qua lại giữa các công cụ khác nhau. Một trải nghiệm mượt mà và liền mạch.
+
+#### Sử dụng Gitleaks để quét secret
+Cách mà Gitleaks hoạt động: [Gần như chỉ cần Regex](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need)
+
+#### Sử dụng database của Aikido để phát hiện thư viện độc hại
+Các vấn đề thường gặp phải bởi các nhóm phát triển: "Làm sao để ta có thể lấy được nguồn dữ liệu đáng tin cậy, cập nhât liên tục về các lỗ hổng bảo mật và mã độc trong các thư viện mã nguồn mở mà ta đang sử dụng?"
+
+Aikido đã đứng ra giải quyết vấn đề này bằng cách cung cấp một cơ sở dữ liệu mã độc được cập nhật liên tục từ nhiều nguồn khác nhau: [data](https://malware-list.aikido.dev/malware_predictions.json)
+
+Cách mà họ xây dựng bộ dữ liệu này:
+
+Thu thập dữ liệu thô từ những nguồn công khai như changelogs, diffs, advisories, release notes, registries… và chạy chúng qua một pipeline LLM để:
+ ↳ Chuẩn hóa các định dạng không đồng nhất
+ ↳ Trích xuất package, version, CVE, severity, exploitability
+ ↳ Phân loại theo hệ sinh thái và loại lỗ hổng (XSS, prototype pollution, etc.)
+ 
+Rồi từ đó một kĩ sư an ninh sẽ xem xét từng phát hiện và gán một Intel ID + mức độ nghiêm trọng.
+
+Kết quả là một hệ thống cung cấp dữ liệu gần như liên tục với các cập nhật về lỗ hổng bảo mật và mã độc trong các thư viện mã nguồn mở.
+
+Ưu điểm của Aikido:
+✅ Mã nguồn mở
+✅ Không tốn chi phí
+✅ API-first
+✅ Ưu tiên sự đóng góp từ cộng đồng
+
+#### Các kiểu kết quả báo cáo
+<img src="assets/images/design.png" width=650/>
 
 ## Kết hoạch phát triển
 | Sprint | Deadline       | Mục tiêu chính                                    | Kết quả cần đạt được                               |
