@@ -5,18 +5,17 @@
 	</div>
   <p align="center">No tea will be spilled today</p>
 </p>
-  
 
-
-## Tổng quan dự án
 Dự án phát triển một tiện ích mở rộng cho VSCode cung cấp:
 - Quét mã nguồn để phát hiện thông tin nhạy cảm như password, API key, token bên trong git repos, files.
 - Phân tích toàn bộ lịch sử git commit để phát hiện các thông tin nhạy cảm đã bị lộ.
 - Cảnh báo về các thư viện độc hại hoặc có nguy cơ lỗ hỏng bảo mật
 - Giao diện thân thiện tích hợp trong VS Code để hiển thị kết quả scan và cảnh báo.
 
-#### Lý do phát triển
+#### 1. Tổng quan dự án
 Chắc chắn trên thị trường đã có nhiều công cụ hỗ trợ tương tự được phổ biến và phát triển từ rất lâu vậy nên chúng tôi không muốn "Reinvent the wheel" mà muốn tận dụng dụng những công nghệ đã có sẵn để nâng cao hơn trải nghiệm của lập trình viên lên một bước mới với việc tích hợp trực tiếp vào IDE, không cần phải setup phức tạp, không cần phải chạy lệnh thủ công, không cần phải chuyển đổi qua lại giữa các công cụ khác nhau. Một trải nghiệm mượt mà và liền mạch.
+
+#### 2. Khảo sát thị trường
 
 #### Sử dụng Gitleaks để quét secret
 Cách mà Gitleaks hoạt động: [Gần như chỉ cần Regex](https://lookingatcomputer.substack.com/p/regex-is-almost-all-you-need)
