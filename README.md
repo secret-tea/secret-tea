@@ -8,11 +8,13 @@
 
 ## Tổng quan dự án
 **Secrets là gì?**
+
 Secrets là những dữ liệu nhạy cảm mà nếu bị lộ sẽ gây ra hậu quả nghiêm trọng đến vấn đề bảo mật của ứng dụng và hệ thống. Những loại secrets thường gặp bao gồm mã định danh (authentication tokens), mật khẩu (passwords), khóa API (API keys), mật mã mã hóa (encryption keys), và nhiều dữ liệu khác có khả năng cung cấp quyền điều khiển đối với tài nguyên.
 
 Việc bị người khác truy cập vào hệ thống bằng các mã token bị lộ có thể dẫn đến việc bị đánh cắp những dữ liệu quan trọng, nguy hiểm đến tính toàn vẹn của hệ thống.
 
 **Công cụ phát hiện secrets là gì?**
+
 Hiểu đơn giản gì nó là công cụ chuyên dụng để xác định và ngăn chặn các sự cố lộ thông tin nhạy cảm mà có thể dẫn tới việc cung cấp quyền truy cập trái phép vào các nguồn tài nguyên như database, các dịch vụ bên ngoài hoặc những tài nguyên quan trọng khác.
 
 Những công cụ này vô cùng quan trọng trong việc đảm bảo thông tin nhạy cảm không bị vô tình được công bố lên các hệ thống kiểm xóa mã nguồn nơi mà kẻ xấu có thể truy cập được. Hậu quả không chỉ dừng lại ở mức rò rỉ dữ liệu mà có thể gây ra hậu quả lớn về tài chính, uy tín đối với khách hàng và tổn hại nghiêm trọng đến chính sách bảo mật của công ty.
@@ -20,6 +22,7 @@ Những công cụ này vô cùng quan trọng trong việc đảm bảo thông 
 
 
 **Use Cases of Secret Scanning Tools**
+
 Lập trình viên sử dụng công cụ phát hiện secret này trong nhiều ngữ cảnh khác nhau nhưng phần lớn đều với mục đích củng cố bảo mật cho hệ thống trong quá trình phát triển ứng dụng.
 
 Trong môi trường phát triển chung của tổ chức, một cá nhân có thể vô tình lưu thông tin xác thực database dùng để truy cập vào máy chủ  thống vào mã nguồn của họ. Nếu như mã nguồn này được công bố lên các nền tảng quản lý mã nguồn công khai thì việc lộ thông tin này có thể dẫn đến nhiều sự cố đáng tiếc cho hệ thống nếu như không được khắc phục đúng cách.
