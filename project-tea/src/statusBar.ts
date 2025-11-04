@@ -3,7 +3,7 @@ import { FindingsSummary } from "./utils/gitleaks";
 
 let statusBarItem: vscode.StatusBarItem;
 
-
+let errorBackground = new vscode.ThemeColor('statusBarItem.errorBackground');
 let warningBackground = new vscode.ThemeColor('statusBarItem.warningBackground');
 
 // Initializes the status bar for reporting found secrets
@@ -27,8 +27,15 @@ export function UpdateStatusBar() {
 	} else {
 		statusBarItem.backgroundColor = undefined;
 	}
+	let text = `${count > 0 ? `$(warning) ` : ""} Exposing ${count} secret${count === 1 ? "" : "s"}`;
+	statusBarItem.text = text;
+	statusBarItem.show();
+}
 
-	statusBarItem.text = `${count} exposing secret${count === 1 ? "" : "s"}`;
+// Show error in the status bar
+export function ShowStatusBarError(message: string = "Scan failed") {
+	statusBarItem.text = `$(error) ${message}`;
+	statusBarItem.backgroundColor = errorBackground;
 	statusBarItem.show();
 }
 

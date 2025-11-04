@@ -1,42 +1,32 @@
 {
   "name": "project-tea",
-  "displayName": "Project Tea",
+  "displayName": "Secret Tea",
 	"publisher": "SecretTea",
   "description": "Scan your workspace for secrets!",
-  "version": "0.0.2",
+  "version": "0.0.6",
 	"icon": "icon.png",
-  "repository": {
-    "type": "git",
-    "url": ""
-  },
-  "engines": {
+	 "repository": {
+	   "type": "git",
+	   "url": ""
+	 },
+	 "engines": {
     "vscode": "^1.104.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onDidChangeTextDocument",
+    "onDidSaveTextDocument",
+    "onStartupFinished"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "project-tea.helloWorld",
-        "title": "Hello World"
-      },
-			{
-        "command": "project-tea.scanCurrentFile",
-        "category": "Tea",
-        "title": "Scan the current file for secrets"
-      },
-			{
-        "command": "project-tea.scanCurrentWorkspace",
-        "category": "Tea",
-        "title": "Scan the current workspace for secrets"
-      },
 			{
         "command": "project-tea.scanRepoHistory",
-        "category": "Tea",
-        "title": "Scan the entire repo's history for secrets"
+        "category": "Scan secrets",
+        "title": "Scan git commit history"
       }
     ]
   },

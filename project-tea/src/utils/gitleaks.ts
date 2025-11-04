@@ -4,21 +4,22 @@ import path from 'path';
 import * as vscode from 'vscode';
 import { DiagnosticCollection, DiagnosticsMap } from '../diagnostics';
 import { scanHistoryResultValue, scanSummaryResultValue } from '../interface';
+import { ShowStatusBarError } from '../statusBar';
 
 export let FindingsSummary: Set<scanSummaryResultValue> = new Set();
 export let FindingsHistory: Set<scanHistoryResultValue> = new Set();
 
 function getExecutablePath(executablePrefix: string) {
-    const execInExecutables = path.join(`${__dirname}/../../executables`, executablePrefix);
-    const execInParent = path.join(`${__dirname}/../../`, executablePrefix);
+	const execInExecutables = path.join(`${__dirname}/../../executables`, executablePrefix);
+	const execInParent = path.join(`${__dirname}/../../`, executablePrefix);
 
-    if (fs.existsSync(execInExecutables)) {
-        return execInExecutables;
-    } else if (fs.existsSync(execInParent)) {
-        return execInParent;
-    }
+	if (fs.existsSync(execInExecutables)) {
+		return execInExecutables;
+	} else if (fs.existsSync(execInParent)) {
+		return execInParent;
+	}
 
-    throw new Error(`Executable ${executablePrefix} not found in either location`);
+	throw new Error(`Executable ${executablePrefix} not found in either location`);
 }
 
 function getExecutablePrefix() {
@@ -28,22 +29,22 @@ function getExecutablePrefix() {
 
     // Normalize platform and architecture names to match the naming convention of the executables
     if (platform === 'darwin') {
-        myplatform = 'darwin';
+			myplatform = 'darwin';
     } else if (platform === 'linux') {
-        myplatform = 'linux';
+			myplatform = 'linux';
     }
 
     // Normalize architecture, if necessary
     if (arch === 'ia32') {
-        arch = 'ia32'; // idk
+			arch = 'ia32'; // idk
     } else if (arch === 'x64') {
-        arch = 'x64';
+			arch = 'x64';
     } else if (arch.includes('arm')) {
-        if (arch === 'arm64') {
-            arch = 'arm64';
-        } else {
-            arch = `arm`; // idk
-        }
+			if (arch === 'arm64') {
+				arch = 'arm64';
+			} else {
+				arch = `arm`; // idk
+			}
     }
 
     // Construct the executable filename
@@ -65,30 +66,46 @@ export function RunScanCurrentDir(workspacePath: string, isWorkspaceScan = false
 		const command = `${executablePath} detect --log-level error --source ${workspacePath} --no-color --no-banner -v --no-git`;
 
 		exec(command, (err, stdout, stderr) => {
+			// Note: gitleaks exits with a non-zero code when it finds secrets.
+			// That causes `err` to be set even though stdout contains the findings.
+			// Treat non-zero exits as non-fatal when stdout is present and parse the output.
 			if (stderr) {
-				const errorMessage = `Failed to run the query: ${stderr}`;
-				vscode.window.showErrorMessage(errorMessage);
-				console.error(errorMessage);
-				reject(new Error(stderr || err!.message));
-				return;
+				const errorMessage = `Gitleaks scan stderr: ${stderr}`;
+				console.warn(errorMessage);
 			}
 
 			if (stdout) {
-				vscode.window.showInformationMessage(stdout);
-				parseAndHighlightFindings(stdout, isWorkspaceScan);
-				resolve(stdout);
-			} else {
-				// vscode.window.showInformationMessage(`No secrets found in ${workspacePath}`);
-				FindingsSummary = new Set();
-				if (isWorkspaceScan) {
-						DiagnosticCollection.clear();
+				// Parse the output even if `err` exists (findings cause non-zero exit code).
+				try {
+					parseAndHighlightFindings(stdout, isWorkspaceScan);
+					resolve(stdout);
+				} catch (parseError) {
+					console.error("Error parsing gitleaks output:", parseError);
+					vscode.window.showErrorMessage(`Error parsing gitleaks output: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+					reject(parseError);
 				}
-				resolve(stdout);
+				return;
 			}
+
+			// If there's no stdout, treat this as a real error (or no findings).
+			if (err) {
+				const errorMessage = `Gitleaks scan failed: ${err.message}`;
+				vscode.window.showErrorMessage(errorMessage);
+				ShowStatusBarError();
+				console.error(errorMessage, err);
+				reject(err);
+				return;
+			}
+
+			// No stdout and no err -> no findings
+			FindingsSummary = new Set();
+			if (isWorkspaceScan) {
+				DiagnosticCollection.clear();
+			}
+			resolve(stdout);
 		});
 	});
 }
-
 
 export function RunScanRepoHistory(workspacePath?: string) {
 	return new Promise((resolve, reject) => {
@@ -99,24 +116,34 @@ export function RunScanRepoHistory(workspacePath?: string) {
 		const execOptions = workspacePath ? { cwd: workspacePath } : {};
 
 		exec(command, execOptions, (err, stdout, stderr) => {
+			// As above: gitleaks can return a non-zero exit code when it finds secrets.
 			if (stderr) {
-				const errorMessage = `Failed to run the query: ${stderr}`;
-				vscode.window.showErrorMessage(errorMessage);
-				console.error(errorMessage);
-				reject(new Error(stderr || err!.message));
-				return;
+				const errorMessage = `Gitleaks repo history scan stderr: ${stderr}`;
+				console.warn(errorMessage);
 			}
 
 			if (stdout) {
-				console.log(stdout);
-				vscode.window.showInformationMessage(stdout);
-				parseFindingForRepoHistory(stdout);
-				resolve(stdout);
-			} else {
-				vscode.window.showInformationMessage(`No secrets found in the current directory`);
-				FindingsHistory.clear();
-				resolve(stdout);
+				try {
+					parseFindingForRepoHistory(stdout);
+					resolve(stdout);
+				} catch (parseError) {
+					console.error("Error parsing gitleaks repo history output:", parseError);
+					vscode.window.showErrorMessage(`Error parsing gitleaks repo history output: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+					reject(parseError);
+				}
+				return;
 			}
+
+			if (err) {
+				const errorMessage = `Gitleaks repo history scan failed: ${err.message}`;
+				console.error(errorMessage, err);
+				vscode.window.showErrorMessage(errorMessage);
+				reject(err);
+				return;
+			}
+
+			FindingsHistory.clear();
+			resolve(stdout);
 		});
 	});
 }
@@ -128,8 +155,8 @@ function parseAndHighlightFindings(output: string, isWorkspaceScan: boolean) {
 	DiagnosticsMap.clear(); // Clear the diagnostics map
 
 	if (isWorkspaceScan) {
-			DiagnosticCollection.clear(); // Clear previous workspace diagnostics before setting new ones
-			FindingsSummary.clear();
+		DiagnosticCollection.clear(); // Clear previous workspace diagnostics before setting new ones
+		FindingsSummary.clear();
 	}
 
 	const fileMap = new Map();
@@ -185,33 +212,32 @@ function parseAndHighlightFindings(output: string, isWorkspaceScan: boolean) {
 }
 
 function highlightSecretsInFile(fileUri: string, diagnostics: vscode.Diagnostic[]) {
-    // Open the text document in the background without showing it
-    vscode.workspace.openTextDocument(fileUri).then((doc) => {
-        // Find if this document is currently open in any editor
-        const editor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.toString() === fileUri.toString());
+	// Open the text document in the background without showing it
+	vscode.workspace.openTextDocument(fileUri).then((doc) => {
+		// Find if this document is currently open in any editor
+		const editor = vscode.window.visibleTextEditors.find(ed => ed.document.uri.toString() === fileUri.toString());
 
-        if (editor) {
-            // Prepare decorations for all diagnostics
-            const decorations: vscode.DecorationOptions[] = [];  // Collect all ranges for secrets to highlight
-            const decorationType = vscode.window.createTextEditorDecorationType({
-                backgroundColor: 'rgba(255, 0, 0, 0.3)',
-                border: '1px solid red'
-            });
+		if (editor) {
+			// Prepare decorations for all diagnostics
+			const decorations: vscode.DecorationOptions[] = [];  // Collect all ranges for secrets to highlight
+			const decorationType = vscode.window.createTextEditorDecorationType({
+				backgroundColor: 'rgba(255, 0, 0, 0.3)',
+				border: '1px solid red'
+			});
 
-            diagnostics.forEach(diagnostic => {
-                decorations.push({ range: diagnostic.range });
-            });
+			diagnostics.forEach(diagnostic => {
+				decorations.push({ range: diagnostic.range });
+			});
 
-            // Apply all decorations at once
-            editor.setDecorations(decorationType, decorations);
-        } else {
-            // If the document is not currently open in any editor, do nothing
-            // or handle this case differently depending on your needs
-            console.log("Document not currently viewed, skipping decorations.");
-        }
-    });
+			// Apply all decorations at once
+			editor.setDecorations(decorationType, decorations);
+		} else {
+			// If the document is not currently open in any editor, do nothing
+			// or handle this case differently depending on your needs
+			console.log("Document not currently viewed, skipping decorations.");
+		}
+	});
 }
-
 
 // Function to parse gitleaks output findings for repository history
 export function parseFindingForRepoHistory(output: string) {
