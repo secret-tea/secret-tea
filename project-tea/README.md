@@ -4,9 +4,10 @@ This extension helps prevent committing secrets like API keys and passwords into
 
 ## Usage
 * The current workspace will be scan automatically on saving.
+
 * To scan for all commit history:
 	*  Open the Command Palette (`Ctrl+Shift+P` on Windows/Linux or `Cmd+Shift+P` on macOS).
-	*  Type and select `Tea: Scan the entire repo's history for secrets`.
+	*  Type and select `Scan secrets: Scan git commit history`.
 
 ## How It Works
 

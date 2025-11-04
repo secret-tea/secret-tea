@@ -8,7 +8,6 @@ let workspaceFolder: string;
 /* 
 	Register commands to the extension
 	Available commands
-		- project-tea.scanCurrentFile
 		- project-tea.scanCurrentWorkspace
 		- project-tea.scanRepoHistory
 */
@@ -31,7 +30,8 @@ export function RegisterCommand(context: vscode.ExtensionContext) {
 			await RunScanRepoHistory(workspaceFolder);
 			UpdateSummary(context.subscriptions);
 		} catch (error: any) {
-			vscode.window.showErrorMessage(`Error generating secrets summary: ${error.message}`);
+			console.error("Error during repo history scan:", error);
+			vscode.window.showErrorMessage(`Error during repo history scan: ${error instanceof Error ? error.message : String(error)}`);
 		}
 	}));
 
@@ -45,6 +45,6 @@ export function RegisterCommand(context: vscode.ExtensionContext) {
 
 // Run the scan, update the status bar when any document is saved in the workspace
 async function handleDocumentSave(source: string) {
-    await RunScanCurrentDir(source, true);
-    UpdateStatusBar();
+	await RunScanCurrentDir(source, true);
+	UpdateStatusBar();
 }
