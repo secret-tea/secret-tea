@@ -245,7 +245,7 @@ export function parseFindingForRepoHistory(output: string) {
 
 	// Clear previous findings for history scans
 	FindingsHistory.clear();
-	
+
 	findings.forEach(finding => {
 		const secretMatch = finding.match(/Secret:\s+(.*)/);
 		const fileMatch = finding.match(/File:\s+(.*)/);
