@@ -5,7 +5,7 @@ let summaryPanel: vscode.WebviewPanel | null;
 
 export function UpdateSummary(subscriptions: vscode.ExtensionContext["subscriptions"]) {
 	if (summaryPanel) {
-		// If the panel is already open, update its content 
+		// If the panel is already open, update its content
 		summaryPanel.webview.html = GetSecretsSummaryHtml();
 		summaryPanel.reveal(vscode.ViewColumn.One);
 	} else {
@@ -87,7 +87,7 @@ export function GetSecretsSummaryHtml() {
 				<td>${secret.author}</td>
 				<td>${secret.email}</td>
 				<td>${secret.commit.slice(0, 12)}</td>
-				<td><a href='${secret.line}' target="_blank">${secret.line}</a></td>
+				<td><a href='${secret.file}' target="_blank">${secret.file}</a></td>
 				<td>${secret.line + 1}</td>
 				<td>${secret.ruleID}</td>
 				<td>${secret.secret}</td>
