@@ -1,12 +1,26 @@
-import { FindingsHistory } from "./utils/gitleaks";
 import * as vscode from "vscode";
+import { TemplateEngine } from "./services/TemplateEngine";
+import { FindingsStore } from "./stores/FindingsStore";
 
 let summaryPanel: vscode.WebviewPanel | null;
+const templateEngine = new TemplateEngine();
+let currentFindingsStore: FindingsStore | null = null;
 
-export function UpdateSummary(subscriptions: vscode.ExtensionContext["subscriptions"]) {
+/**
+ * Update the summary panel with findings from FindingsStore
+ * @param subscriptions Extension context subscriptions
+ * @param findingsStore The FindingsStore containing history findings
+ */
+export function UpdateSummary(
+	subscriptions: vscode.ExtensionContext["subscriptions"],
+	findingsStore: FindingsStore
+) {
+	// Store reference to findings store
+	currentFindingsStore = findingsStore;
+
 	if (summaryPanel) {
 		// If the panel is already open, update its content
-		summaryPanel.webview.html = GetSecretsSummaryHtml();
+		summaryPanel.webview.html = GetSecretsSummaryHtml(findingsStore);
 		summaryPanel.reveal(vscode.ViewColumn.One);
 	} else {
 		// Create the panel
@@ -16,190 +30,99 @@ export function UpdateSummary(subscriptions: vscode.ExtensionContext["subscripti
 			vscode.ViewColumn.One,
 			{}
 		);
-		summaryPanel.webview.html = GetSecretsSummaryHtml();
+		summaryPanel.webview.html = GetSecretsSummaryHtml(findingsStore);
 		summaryPanel.onDidDispose(() => {
 			summaryPanel = null;
+			currentFindingsStore = null;
 		}, null, subscriptions);
 
 		// Refresh content when the panel gets focus
 		summaryPanel.onDidChangeViewState(e => {
-			if (summaryPanel && summaryPanel.visible) {
-					refreshsummaryPanel();
+			if (summaryPanel && summaryPanel.visible && currentFindingsStore) {
+				refreshSummaryPanel(currentFindingsStore);
 			}
 		});
 	}
 }
 
-/// Refresh summary page with updated results
-function refreshsummaryPanel() {
+/**
+ * Refresh summary panel with updated results
+ * @param findingsStore The FindingsStore containing history findings
+ */
+function refreshSummaryPanel(findingsStore: FindingsStore) {
 	if (summaryPanel) {
-		summaryPanel.webview.html = GetSecretsSummaryHtml();
+		summaryPanel.webview.html = GetSecretsSummaryHtml(findingsStore);
 	}
 }
 
-export function GetSecretsSummaryHtml() {
-	if (FindingsHistory.size === 0) {
-		return `
-		<html>
-			<head>
-				<meta charset="UTF-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<title>Secrets Found in Commit History</title>
-				<style>
-					body {
-						font-family: "Segoe UI", Roboto, sans-serif;
-						background-color: #1e1e1e;
-						color: #e4e6eb;
-						margin: 0;
-						padding: 20px;
-					}
-					h1 {
-						text-align: center;
-						margin-bottom: 1.2em;
-						color: #f0f0f0;
-					}
-					.no-secrets-message {
-						margin: 40px auto;
-						padding: 32px 24px;
-						max-width: 480px;
-						background: #252526;
-						border-radius: 8px;
-						box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-						text-align: center;
-						font-size: 1.25em;
-						color: #b0b0b0;
-					}
-				</style>
-			</head>
-			<body>
-				<div class="no-secrets-message">
-					No secrets were found.
-				</div>
-			</body>
-		</html>
-		`;
+/**
+ * Generate HTML for secrets summary
+ * Uses template files from src/templates/
+ * @param findingsStore The FindingsStore containing history findings
+ * @returns HTML string for webview
+ */
+export function GetSecretsSummaryHtml(findingsStore: FindingsStore): string {
+	// Get history findings from store
+	const historyFindings = findingsStore.getAllHistoryFindings();
+
+	// If no findings, show empty state
+	if (historyFindings.length === 0) {
+		return templateEngine.render('summary-empty');
 	}
 
-	const rows = Array.from(FindingsHistory).map(secret => {
+	// Generate table rows from findings
+	const rows = generateTableRows(historyFindings);
+
+	// Render template with table rows
+	return templateEngine.render('summary-table', {
+		tableRows: rows
+	});
+}
+
+/**
+ * Generate HTML table rows from findings history
+ * @param findings Array of history findings
+ * @returns HTML string containing table rows
+ */
+function generateTableRows(findings: any[]): string {
+	return findings.map(secret => {
+		// Escape HTML to prevent XSS
+		const safeDate = escapeHtml(secret.date);
+		const safeAuthor = escapeHtml(secret.author);
+		const safeEmail = escapeHtml(secret.email);
+		const safeCommit = escapeHtml(secret.commit.slice(0, 12));
+		const safeFile = escapeHtml(secret.file);
+		const safeLine = secret.line + 1; // Convert to 1-indexed
+		const safeRuleID = escapeHtml(secret.ruleID);
+		const safeSecret = escapeHtml(secret.secret);
+		const safeLink = secret.link ? escapeHtml(secret.link) : '';
+
 		return `
 			<tr>
-				<td>${secret.date}</td>
-				<td>${secret.author}</td>
-				<td>${secret.email}</td>
-				<td>${secret.commit.slice(0, 12)}</td>
-				<td><a href='${secret.file}' target="_blank">${secret.file}</a></td>
-				<td>${secret.line + 1}</td>
-				<td>${secret.ruleID}</td>
-				<td>${secret.secret}</td>
-				<td><a href='${secret.link}' target="_blank">${secret.link}</a></td>
+				<td>${safeDate}</td>
+				<td>${safeAuthor}</td>
+				<td>${safeEmail}</td>
+				<td>${safeCommit}</td>
+				<td><a href="${safeFile}" target="_blank">${safeFile}</a></td>
+				<td>${safeLine}</td>
+				<td>${safeRuleID}</td>
+				<td>${safeSecret}</td>
+				<td>${safeLink ? `<a href="${safeLink}" target="_blank">${safeLink}</a>` : ''}</td>
 			</tr>
 		`;
 	}).join('');
+}
 
-	return `
-		<html>
-			<head>
-				<meta charset="UTF-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<title>Secrets Found in Commit History</title>
-				<style>
-					body {
-						font-family: "Segoe UI", Roboto, sans-serif;
-						background-color: #1e1e1e;
-						color: #e4e6eb;
-						margin: 0;
-						padding: 20px;
-					}
-
-					h1 {
-						text-align: center;
-						margin-bottom: 1.2em;
-						color: #f0f0f0;
-					}
-
-					.table-container {
-						overflow-x: auto;
-						background-color: #252526;
-						border-radius: 8px;
-						box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-					}
-
-					table {
-						width: 100%;
-						border-collapse: collapse;
-						min-width: 980px;
-					}
-
-					th, td {
-						padding: 10px 14px;
-						text-align: left;
-						border-bottom: 1px solid #3a3a3a;
-						white-space: nowrap;
-						overflow: hidden;
-						text-overflow: ellipsis;
-					}
-
-					th {
-						background-color: #323233;
-						color: #cfcfcf;
-						position: sticky;
-						top: 0;
-						z-index: 2;
-						text-transform: uppercase;
-						font-size: 13px;
-						letter-spacing: 0.5px;
-					}
-
-					tr:nth-child(even) {
-						background-color: #2a2a2a;
-					}
-
-					tr:hover {
-						background-color: #30363b;
-					}
-
-					a {
-						color: #4e9af1;
-						text-decoration: none;
-					}
-
-					a:hover {
-						color: #82cfff;
-						text-decoration: underline;
-					}
-
-					@media (max-width: 768px) {
-						table {
-							font-size: 13px;
-						}
-						th, td {
-							padding: 8px 10px;
-						}
-					}
-				</style>
-			</head>
-			<body>
-				<div class="table-container">
-					<table>
-						<thead>
-							<tr>
-								<th>Date</th>
-								<th>Author</th>
-								<th>Email</th>
-								<th>Commit</th>
-								<th>File</th>
-								<th>Line</th>
-								<th>Rule ID</th>
-								<th>Secret</th>
-								<th>Link</th>
-							</tr>
-						</thead>
-						<tbody>
-							${rows}
-						</tbody>
-					</table>
-				</div>
-			</body>
-		</html>
-	`;
+/**
+ * Escape HTML special characters to prevent XSS attacks
+ * @param unsafe String that may contain HTML special characters
+ * @returns Safe HTML string
+ */
+function escapeHtml(unsafe: string): string {
+	return unsafe
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
 }

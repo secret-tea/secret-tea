@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Secrets Found in Commit History</title>
+		<style>
+			body {
+				font-family: "Segoe UI", Roboto, sans-serif;
+				background-color: #1e1e1e;
+				color: #e4e6eb;
+				margin: 0;
+				padding: 20px;
+			}
+
+			h1 {
+				text-align: center;
+				margin-bottom: 1.2em;
+				color: #f0f0f0;
+			}
+
+			.table-container {
+				overflow-x: auto;
+				background-color: #252526;
+				border-radius: 8px;
+				box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				min-width: 980px;
+			}
+
+			th, td {
+				padding: 10px 14px;
+				text-align: left;
+				border-bottom: 1px solid #3a3a3a;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			th {
+				background-color: #323233;
+				color: #cfcfcf;
+				position: sticky;
+				top: 0;
+				z-index: 2;
+				text-transform: uppercase;
+				font-size: 13px;
+				letter-spacing: 0.5px;
+			}
+
+			tr:nth-child(even) {
+				background-color: #2a2a2a;
+			}
+
+			tr:hover {
+				background-color: #30363b;
+			}
+
+			a {
+				color: #4e9af1;
+				text-decoration: none;
+			}
+
+			a:hover {
+				color: #82cfff;
+				text-decoration: underline;
+			}
+
+			@media (max-width: 768px) {
+				table {
+					font-size: 13px;
+				}
+				th, td {
+					padding: 8px 10px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="table-container">
+			<table>
+				<thead>
+					<tr>
+						<th>Date</th>
+						<th>Author</th>
+						<th>Email</th>
+						<th>Commit</th>
+						<th>File</th>
+						<th>Line</th>
+						<th>Rule ID</th>
+						<th>Secret</th>
+						<th>Link</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{tableRows}}
+				</tbody>
+			</table>
+		</div>
+	</body>
+</html>

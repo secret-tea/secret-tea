@@ -1,15 +1,15 @@
 {
   "name": "project-tea",
   "displayName": "Secret Tea",
-	"publisher": "SecretTea",
+  "publisher": "SecretTea",
   "description": "Scan your workspace for secrets!",
   "version": "0.0.6",
-	"icon": "icon.png",
-	 "repository": {
-	   "type": "git",
-	   "url": ""
-	 },
-	 "engines": {
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
     "vscode": "^1.104.0"
   },
   "categories": [
@@ -23,7 +23,7 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-			{
+      {
         "command": "project-tea.scanRepoHistory",
         "category": "Scan secrets",
         "title": "Scan git commit history"
@@ -32,21 +32,28 @@
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && pnpm run copy-templates",
+    "copy-templates": "mkdir -p out/templates && cp src/templates/*.html out/templates/",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:vscode": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.104.0",
-    "@types/mocha": "^10.0.10",
+    "@jest/globals": "^30.2.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "22.x",
+    "@types/vscode": "^1.104.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
-    "eslint": "^9.36.0",
-    "typescript": "^5.9.3",
     "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.36.0",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
   }
 }
