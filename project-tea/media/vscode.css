@@ -1,62 +1,60 @@
+/* VS Code Theme Variables and Base Styles */
 :root {
-	--container-padding: 20px;
+	--container-padding: 12px;
 	--input-padding-vertical: 6px;
-	--input-padding-horizontal: 4px;
+	--input-padding-horizontal: 8px;
 	--input-margin-vertical: 4px;
-	--input-margin-horizontal: 0;
+	--scrollbar-thickness: 10px;
 }
 
 body {
-	padding: 0 var(--container-padding);
+	padding: 0;
 	color: var(--vscode-foreground);
+	background-color: var(--vscode-sideBar-background);
 	font-size: var(--vscode-font-size);
-	font-weight: var(--vscode-font-weight);
 	font-family: var(--vscode-font-family);
-	background-color: var(--vscode-editor-background);
+	font-weight: var(--vscode-font-weight);
+	line-height: 1.4;
 }
 
-ol,
-ul {
-	padding-left: var(--container-padding);
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+	width: var(--scrollbar-thickness);
+	height: var(--scrollbar-thickness);
 }
 
-body > *,
-form > * {
-	margin-block-start: var(--input-margin-vertical);
-	margin-block-end: var(--input-margin-vertical);
+::-webkit-scrollbar-track {
+	background: transparent;
 }
 
-*:focus {
-	outline-color: var(--vscode-focusBorder) !important;
+::-webkit-scrollbar-thumb {
+	background: var(--vscode-scrollbarSlider-background);
+	border-radius: 3px;
 }
 
-a {
-	color: var(--vscode-textLink-foreground);
+::-webkit-scrollbar-thumb:hover {
+	background: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
-a:hover,
-a:active {
-	color: var(--vscode-textLink-activeForeground);
+::-webkit-scrollbar-thumb:active {
+	background: var(--vscode-scrollbarSlider-activeBackground);
 }
 
-code {
-	font-size: var(--vscode-editor-font-size);
-	font-family: var(--vscode-editor-font-family);
-}
-
+/* Button Styles */
 button {
 	border: none;
 	padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-	width: 100%;
 	text-align: center;
 	outline: 1px solid transparent;
 	outline-offset: 2px !important;
 	color: var(--vscode-button-foreground);
 	background: var(--vscode-button-background);
+	cursor: pointer;
+	font-family: var(--vscode-font-family);
+	font-size: var(--vscode-font-size);
 }
 
 button:hover {
-	cursor: pointer;
 	background: var(--vscode-button-hoverBackground);
 }
 
@@ -73,19 +71,323 @@ button.secondary:hover {
 	background: var(--vscode-button-secondaryHoverBackground);
 }
 
-input:not([type='checkbox']),
-textarea {
-	display: block;
-	width: 100%;
-	border: none;
-	font-family: var(--vscode-font-family);
-	padding: var(--input-padding-vertical) var(--input-padding-horizontal);
-	color: var(--vscode-input-foreground);
-	outline-color: var(--vscode-input-border);
-	background-color: var(--vscode-input-background);
+/* Codicon Support */
+.codicon {
+	font-family: 'codicon';
+	font-size: 16px;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-decoration: none;
+	text-rendering: auto;
+	text-align: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
 }
 
-input::placeholder,
-textarea::placeholder {
-	color: var(--vscode-input-placeholderForeground);
+/* Sidebar Specific Styles */
+.sidebar-container {
+	padding: 0;
+	height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+/* Full-width scan history button - matches Source Control commit button */
+.scan-history-btn {
+	width: 90%;
+	padding: 8px 12px;
+	margin: 8px 8px 8px 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 400;
+	transition: background-color 0.1s ease;
+	outline: none;
+}
+
+.scan-history-btn:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.scan-history-btn:active {
+	background: var(--vscode-button-hoverBackground);
+	transform: translateY(1px);
+}
+
+.scan-history-btn:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: 2px;
+}
+
+.scan-history-btn .codicon {
+	font-size: 16px;
+}
+
+.scan-history-btn .btn-text {
+	font-family: var(--vscode-font-family);
+}
+
+.secrets-list {
+	margin: 0;
+	padding: 0;
+}
+
+/* Compact file groups - no gaps between collapsed files */
+.file-group {
+	margin: 0;
+	border: none;
+	border-radius: 0;
+	overflow: visible;
+}
+
+/* File header - match Explorer item height */
+.file-header {
+	background: transparent;
+	padding: 0 8px;
+	height: 22px;
+	cursor: pointer;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-weight: 400;
+	transition: background-color 0.1s ease;
+	user-select: none;
+	color: var(--vscode-foreground);
+}
+
+.file-header:hover {
+	background: var(--vscode-list-hoverBackground);
+}
+
+.file-header.selected {
+	background: var(--vscode-list-activeSelectionBackground);
+	color: var(--vscode-list-activeSelectionForeground);
+}
+
+.file-header:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.file-info {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex: 1;
+	min-width: 0;
+}
+
+/* Toggle chevron - codicon style */
+.file-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.15s ease;
+	width: 16px;
+	height: 16px;
+	font-size: 16px;
+	color: var(--vscode-foreground);
+	opacity: 0.75;
+	flex-shrink: 0;
+}
+
+.file-toggle.expanded {
+	transform: rotate(90deg);
+}
+
+.file-toggle:hover {
+	opacity: 1;
+}
+
+/* File icon */
+.file-icon {
+	font-size: 16px;
+	opacity: 0.85;
+	flex-shrink: 0;
+	color: var(--vscode-foreground);
+}
+
+.file-name {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 13px;
+	line-height: 22px;
+	color: inherit;
+}
+
+/* Badge for secret count */
+.secret-count {
+	background: var(--vscode-badge-background);
+	color: var(--vscode-badge-foreground);
+	padding: 1px 5px;
+	border-radius: 11px;
+	font-size: 11px;
+	font-weight: 600;
+	min-width: 18px;
+	text-align: center;
+	line-height: 1.4;
+}
+
+/* Secrets container with smooth animation */
+.secrets-container {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.15s ease-out;
+	background: transparent;
+}
+
+.secrets-container.expanded {
+	max-height: 2000px;
+	transition: max-height 0.2s ease-in;
+}
+
+/* Secret items - indented like tree children */
+.secret-item {
+	padding: 0 8px 0 28px;
+	height: 22px;
+	cursor: pointer;
+	transition: background-color 0.1s ease;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	position: relative;
+	color: var(--vscode-foreground);
+}
+
+/* Indent guide line */
+.secret-item::before {
+	content: '';
+	position: absolute;
+	left: 18px;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background-color: var(--vscode-tree-indentGuidesStroke);
+	opacity: 0.4;
+}
+
+.secret-item:hover {
+	background: var(--vscode-list-hoverBackground);
+}
+
+.secret-item:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: -1px;
+}
+
+.secret-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.secret-icon {
+	font-size: 14px;
+	flex-shrink: 0;
+	opacity: 0.8;
+	color: var(--vscode-errorForeground);
+}
+
+.secret-rule {
+	color: var(--vscode-errorForeground);
+	font-weight: 500;
+	font-size: 11px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.secret-line {
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground);
+	opacity: 0.7;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
+/* Remove preview from compact view - show on hover tooltip instead */
+.secret-preview {
+	display: none;
+}
+
+/* Optional: Show preview on hover as tooltip */
+.secret-item:hover::after {
+	content: attr(title);
+	position: absolute;
+	left: 100%;
+	top: 0;
+	margin-left: 8px;
+	padding: 4px 8px;
+	background: var(--vscode-editorHoverWidget-background);
+	border: 1px solid var(--vscode-editorHoverWidget-border);
+	border-radius: 3px;
+	color: var(--vscode-editorHoverWidget-foreground);
+	font-size: 12px;
+	white-space: nowrap;
+	z-index: 100;
+	pointer-events: none;
+	max-width: 300px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.loading,
+.no-secrets,
+.error-message {
+	text-align: center;
+	padding: 20px 12px;
+	color: var(--vscode-descriptionForeground);
+	font-size: 12px;
+}
+
+.error-message {
+	color: var(--vscode-errorForeground);
+	background: var(--vscode-inputValidation-errorBackground);
+	border: 1px solid var(--vscode-inputValidation-errorBorder);
+	border-radius: 3px;
+	margin: 8px;
+}
+
+.empty-icon {
+	font-size: 48px;
+	opacity: 0.3;
+	margin-bottom: 8px;
+}
+
+/* Fade-in animation for content */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.file-group {
+	animation: fadeIn 0.2s ease-out;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+	outline: 2px solid var(--vscode-focusBorder);
+	outline-offset: 2px;
 }

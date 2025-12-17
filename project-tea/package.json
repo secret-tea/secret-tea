@@ -22,19 +22,67 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "project-tea-sidebar-view",
+          "title": "Secret Tea",
+          "icon": "media/secret_tea.svg"
+        }
+      ]
+    },
+    "views": {
+      "project-tea-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "project-tea-sidebar",
+          "name": "Secret Tea",
+          "icon": "media/secret_tea.svg"
+        }
+      ]
+    },
     "commands": [
       {
+        "command": "project-tea.scanCurrentWorkspace",
+        "category": "Secret Tea",
+        "title": "Scan workspace for secrets"
+      },
+      {
         "command": "project-tea.scanRepoHistory",
-        "category": "Scan secrets",
+        "category": "Secret Tea",
         "title": "Scan git commit history"
+      },
+      {
+        "command": "project-tea.showOutput",
+        "category": "Secret Tea",
+        "title": "Show output log"
+      },
+      {
+        "command": "project-tea.sidebar.refresh",
+        "category": "Secret Tea",
+        "title": "Refresh",
+        "icon": "$(refresh)"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "project-tea.sidebar.refresh",
+          "when": "view == project-tea-sidebar",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p ./ && pnpm run copy-templates",
+    "compile": "pnpm run compile:extension && pnpm run compile:webview && pnpm run copy-templates",
+    "compile:extension": "tsc -p ./",
+    "compile:webview": "tsc -p ./tsconfig.webview.json",
     "copy-templates": "mkdir -p out/templates && cp src/templates/*.html out/templates/",
-    "watch": "tsc -watch -p ./",
+    "watch": "pnpm run watch:extension & pnpm run watch:webview",
+    "watch:extension": "tsc -watch -p ./",
+    "watch:webview": "tsc -watch -p ./tsconfig.webview.json",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src",
     "test": "jest",
@@ -55,5 +103,8 @@
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.44"
   }
 }

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ServiceContainer } from './services/ServiceContainer';
 import { ScanService } from './services/ScanService';
 import { FindingsStore } from './stores/FindingsStore';
-import { ILogger, IStatusBarUI } from './services/interfaces';
+import { ILogger, IStatusBarUI, ISidebarUI } from './services/interfaces';
 import { ErrorHandler } from './services/ErrorHandler';
 import { UpdateSummary } from './summary';
 
@@ -22,7 +22,18 @@ export async function activate(context: vscode.ExtensionContext) {
 		const scanService = container.get<ScanService>('scanService');
 		const findingsStore = container.get<FindingsStore>('findingsStore');
 		const statusBarUI = container.get<IStatusBarUI>('statusBarUI');
+		const sidebarProvider = container.get<ISidebarUI>('sidebarProvider');
 		const errorHandler = container.get<ErrorHandler>('errorHandler');
+
+		logger.info('Registering sidebar view...');
+
+		// Register sidebar webview provider
+		context.subscriptions.push(
+			vscode.window.registerWebviewViewProvider(
+				'project-tea-sidebar',
+				sidebarProvider
+			)
+		);
 
 		logger.info('Registering commands...');
 
@@ -77,10 +88,19 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 		);
 
+		const refreshSidebarCommand = vscode.commands.registerCommand(
+			'project-tea.sidebar.refresh',
+			() => {
+				logger.info('Sidebar refresh command triggered');
+				sidebarProvider.refresh();
+			}
+		);
+
 		// Register commands with context
 		context.subscriptions.push(scanCurrentWorkspaceCommand);
 		context.subscriptions.push(scanRepoHistoryCommand);
 		context.subscriptions.push(showOutputCommand);
+		context.subscriptions.push(refreshSidebarCommand);
 
 		// Register document save handler
 		context.subscriptions.push(
