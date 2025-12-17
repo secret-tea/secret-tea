@@ -3,7 +3,7 @@
   "displayName": "Secret Tea",
   "publisher": "SecretTea",
   "description": "Scan your workspace for secrets!",
-  "version": "0.0.6",
+  "version": "0.0.14",
   "icon": "icon.png",
   "repository": {
     "type": "git",
@@ -97,14 +97,12 @@
     "@types/vscode": "^1.104.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
+    "@vscode/codicons": "^0.0.44",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.36.0",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@vscode/codicons": "^0.0.44"
   }
 }

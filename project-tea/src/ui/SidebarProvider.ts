@@ -220,9 +220,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
       vscode.Uri.joinPath(this.extensionUri, 'media', 'vscode.css')
     );
 
-    // Get codicon font URI - VS Code provides this
+    // Get codicon font URI from media folder (bundled with extension)
     const codiconUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'node_modules', '@vscode/codicons', 'dist', 'codicon.css')
+      vscode.Uri.joinPath(this.extensionUri, 'media', 'codicon.css')
     );
 
     const scriptUri = webview.asWebviewUri(
