@@ -197,4 +197,19 @@ export class FindingsStore {
     this.clearWorkspaceFindings();
     this.clearHistoryFindings();
   }
+
+  /**
+   * Get workspace findings grouped by file
+   * Optimized for sidebar display - reuses internal Map structure
+   * @returns Object mapping file paths to arrays of findings
+   */
+  getGroupedWorkspaceFindings(): { [filePath: string]: WorkspaceFinding[] } {
+    const grouped: { [filePath: string]: WorkspaceFinding[] } = {};
+    this.workspaceFindings.forEach((findings, filePath) => {
+      if (findings.size > 0) {
+        grouped[filePath] = Array.from(findings);
+      }
+    });
+    return grouped;
+  }
 }

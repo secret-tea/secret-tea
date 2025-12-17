@@ -16,18 +16,23 @@ Old Structure:                    New Structure:
 ├── utils/gitleaks.ts            │   ├── ServiceContainer.ts
 ├── statusBar.ts                 │   ├── GitleaksExecutor.ts
 ├── diagnostics.ts               │   ├── ScanService.ts
-└── interface.ts                 │   ├── Logger.ts
+└── interface.ts                 │   ├── NavigationService.ts
+                                 │   ├── Logger.ts
                                  │   ├── ErrorHandler.ts
                                  │   └── interfaces.ts
                                  ├── stores/
                                  │   └── FindingsStore.ts
                                  ├── ui/
                                  │   ├── DiagnosticsUI.ts
-                                 │   └── StatusBarUI.ts
+                                 │   ├── StatusBarUI.ts
+                                 │   └── SidebarProvider.ts
+                                 ├── webview/
+                                 │   └── sidebar.ts
                                  ├── parsers/
                                  │   └── GitleaksOutputParser.ts
                                  └── errors/
-                                     └── CustomErrors.ts
+                                     ├── CustomErrors.ts
+                                     └── SidebarErrors.ts
 ```
 
 ## 🏗️ Architecture Overview
@@ -106,13 +111,18 @@ src/
 │
 ├── ui/                       # UI components
 │   ├── DiagnosticsUI.ts      # Code diagnostics & decorations
-│   └── StatusBarUI.ts        # Status bar management
+│   ├── StatusBarUI.ts        # Status bar management
+│   └── SidebarProvider.ts    # Sidebar webview provider
+│
+├── webview/                  # Webview client-side code
+│   └── sidebar.ts            # Sidebar webview UI logic
 │
 ├── parsers/                  # Data parsers
 │   └── GitleaksOutputParser.ts  # Parse Gitleaks output
 │
 ├── errors/                   # Custom error types
-│   └── CustomErrors.ts       # Error hierarchy
+│   ├── CustomErrors.ts       # Error hierarchy
+│   └── SidebarErrors.ts      # Sidebar-specific errors
 │
 ├── templates/                # HTML templates
 │   ├── summary-empty.html    # Empty state template
@@ -143,12 +153,16 @@ All interfaces are now centralized in [`src/services/interfaces.ts`](src/service
 - `IDiagnosticsUI` - Manage VS Code diagnostics
 - `IStatusBarUI` - Manage status bar
 - `ILogger` - Logging service
+- `INavigationService` - File navigation service
+- `ISidebarUI` - Sidebar webview provider
 
 **Supporting Types:**
 
 - `ScanOptions` - Configuration for scans
 - `ScanResult` - Scan results wrapper
 - `LogLevel` - Logging levels enum
+- `WebviewProtocol` - Type-safe message protocol for webview communication
+- `GroupedFindings` - Findings grouped by file for sidebar display
 
 ### 3. State Management
 
@@ -254,6 +268,13 @@ class ScanService {
 - Provides user-friendly messages
 - Logs errors appropriately
 
+**NavigationService.ts** - File navigation service
+
+- Handles file opening from sidebar/UI
+- Path resolution (absolute, relative, URI formats)
+- File validation before opening
+- Integration with VS Code editor
+
 ### State Management (`src/stores/`)
 
 **FindingsStore.ts** - Centralized state container
@@ -297,6 +318,15 @@ findingsStore.subscribe((event) => {
 - Reactive updates via FindingsStore
 - Error/warning states
 
+**SidebarProvider.ts** - Sidebar webview provider
+
+- Implements VS Code WebviewViewProvider interface
+- Groups findings by file for hierarchical display
+- Handles bidirectional messaging with webview
+- Subscribes to FindingsStore for automatic updates
+- Uses NavigationService for file navigation
+- Manages webview lifecycle and state restoration
+
 ### Parsers (`src/parsers/`)
 
 **GitleaksOutputParser.ts** - Output parsing
@@ -309,9 +339,18 @@ findingsStore.subscribe((event) => {
 
 **CustomErrors.ts** - Custom error types
 
-- 7 specific error classes
+- 7 specific error classes for scanning operations
 - Structured error information
 - Better error handling and debugging
+
+**SidebarErrors.ts** - Sidebar-specific error types
+
+- `SidebarError` - Base class with cause tracking
+- `WebviewCommunicationError` - Webview messaging failures
+- `FileNavigationError` - File opening issues
+- `FileNotFoundError` - Missing file errors
+- `WorkspaceNotFoundError` - Missing workspace errors
+- `StateRestorationError` - State persistence failures
 
 ---
 
@@ -556,6 +595,342 @@ Store emits event  ← ✅ Observer pattern
 Done (fast and automatic!)
 ```
 
+---
+
+## 📊 Sidebar Feature - Architectural Refactoring
+
+### Overview
+
+The sidebar feature provides a hierarchical view of all detected secrets, grouped by file. The implementation underwent comprehensive architectural refactoring to align with established design principles and best practices.
+
+### Before Refactoring (Initial Implementation)
+
+**Structure:**
+
+- Single monolithic `SidebarProvider.ts` with mixed concerns
+- Business logic embedded in UI layer
+- Direct VS Code API calls
+- Generic error handling
+- Type casts breaking type safety
+- Duplicate interface definitions
+
+**Issues:**
+
+- 60+ lines of file navigation logic in UI component
+- Hard-coded dependencies
+- No separation between business logic and presentation
+- Missing custom error types for better error handling
+- Type safety compromised with `as any` casts
+
+### After Refactoring (Current Architecture)
+
+**Architecture Layers:**
+
+```text
+┌─────────────────────────────────────┐
+│     Sidebar Webview (Client)        │
+│      (src/webview/sidebar.ts)       │
+│  • DOM manipulation                 │
+│  • Event delegation                 │
+│  • Debounced search                 │
+│  • Performance optimizations        │
+└─────────────────────────────────────┘
+              ↕ WebviewProtocol (Type-safe messages)
+┌─────────────────────────────────────┐
+│   SidebarProvider (UI Orchestrator) │
+│    (src/ui/SidebarProvider.ts)      │
+│  • Webview lifecycle                │
+│  • Message handling                 │
+│  • State restoration                │
+│  • Delegates to services            │
+└─────────────────────────────────────┘
+         ↓                    ↓
+┌──────────────────┐  ┌──────────────────┐
+│ NavigationService│  │  ErrorHandler    │
+│  • File opening  │  │  • Error msgs    │
+│  • Path resolve  │  │  • Logging       │
+│  • Validation    │  │  • User feedback │
+└──────────────────┘  └──────────────────┘
+```
+
+### Key Architectural Improvements
+
+#### 1. **Type-Safe Communication Protocol**
+
+**Before:**
+```typescript
+// Scattered message types across files
+interface MessageData {
+  command: string;
+  filePath?: string;
+}
+```
+
+**After:**
+```typescript
+// Centralized in services/interfaces.ts
+namespace WebviewProtocol {
+  export type ToExtension =
+    | { command: 'openFile'; filePath: string; line: number; }
+    | { command: 'refresh'; }
+    | { command: 'ready'; };
+
+  export type ToWebview =
+    | { command: 'updateFindings'; findings: GroupedFindings; }
+    | { command: 'error'; message: string; };
+}
+```
+
+#### 2. **NavigationService Extraction**
+
+**Business Logic Separation:**
+
+- Extracted 60+ lines of file navigation logic from `SidebarProvider`
+- Handles path resolution (absolute, relative, `file://` URIs)
+- Validates file existence before opening
+- Provides clean interface for file operations
+
+**Service Interface:**
+```typescript
+interface INavigationService {
+  openFile(filePath: string, line?: number): Promise<void>;
+}
+```
+
+**Benefits:**
+
+- UI layer focuses on presentation
+- Business logic is testable in isolation
+- Reusable across different UI components
+- Clear separation of concerns
+
+#### 3. **Custom Error Hierarchy**
+
+**Before:**
+```typescript
+throw new Error('Failed to open file');
+```
+
+**After:**
+```typescript
+// Specialized error types in errors/SidebarErrors.ts
+class FileNavigationError extends SidebarError {
+  constructor(filePath: string, cause?: Error) {
+    super(`Failed to navigate to file: ${filePath}`, cause);
+  }
+}
+
+class FileNotFoundError extends FileNavigationError {
+  constructor(filePath: string) {
+    super(`File not found: ${filePath}`);
+    this.recoverable = false;
+  }
+}
+```
+
+**Error Types:**
+- `SidebarError` - Base with cause tracking and recoverability
+- `WebviewCommunicationError` - Messaging failures
+- `FileNavigationError` - File opening issues
+- `FileNotFoundError` - Missing files
+- `WorkspaceNotFoundError` - Missing workspace
+- `StateRestorationError` - State persistence
+
+#### 4. **Command-Based Architecture**
+
+**Integration with VS Code Commands:**
+
+```typescript
+// package.json
+{
+  "commands": [{
+    "command": "project-tea.sidebar.refresh",
+    "title": "Refresh Sidebar",
+    "category": "Secret Tea",
+    "icon": "$(refresh)"
+  }]
+}
+
+// extension.ts
+vscode.commands.registerCommand(
+  'project-tea.sidebar.refresh',
+  () => sidebarProvider.refresh()
+);
+```
+
+**Benefits:**
+
+- Accessible from command palette
+- Keyboard shortcut support
+- Consistent with VS Code patterns
+- Testable command handlers
+
+#### 5. **Dependency Injection**
+
+**Before:**
+```typescript
+class SidebarProvider {
+  constructor() {
+    // Hard-coded dependencies
+  }
+
+  private async openFile(path: string) {
+    // Direct VS Code API calls
+    await vscode.window.showTextDocument(/*...*/);
+  }
+}
+```
+
+**After:**
+```typescript
+class SidebarProvider {
+  constructor(
+    private context: vscode.ExtensionContext,
+    private findingsStore: FindingsStore,
+    private navigationService: INavigationService,
+    private errorHandler: ErrorHandler,
+    private logger: ILogger
+  ) {}
+
+  private async handleOpenFile(filePath: string, line: number) {
+    // Delegate to service
+    await this.navigationService.openFile(filePath, line);
+  }
+}
+```
+
+#### 6. **Observer Pattern Integration**
+
+**Automatic UI Updates:**
+```typescript
+// SidebarProvider subscribes to FindingsStore
+this.findingsStore.subscribe((event) => {
+  if (event.type === 'workspace' || event.type === 'workspace-cleared') {
+    this.updateWebview();
+  }
+});
+```
+
+**Flow:**
+```text
+Scan completes
+    ↓
+FindingsStore updated
+    ↓
+Event emitted
+    ↓
+SidebarProvider notified
+    ↓
+Webview automatically refreshed
+```
+
+### Performance Optimizations
+
+**Client-Side (Webview):**
+1. **Debounced Search** - 300ms delay prevents excessive filtering
+2. **Event Delegation** - Single listener for all file clicks
+3. **Batch DOM Updates** - Minimize reflows
+4. **Efficient Rendering** - Only update changed elements
+
+**Extension Host:**
+1. **Lazy Webview Creation** - Only create when sidebar is visible
+2. **State Restoration** - Restore view state after reload
+3. **Efficient Grouping** - Pre-group findings before sending to webview
+4. **Proper Disposal** - Clean up resources on deactivation
+
+### File Structure
+
+```text
+src/
+├── ui/
+│   └── SidebarProvider.ts          # Webview provider (orchestration)
+├── webview/
+│   └── sidebar.ts                  # Client-side UI logic
+├── services/
+│   ├── NavigationService.ts        # File navigation business logic
+│   └── interfaces.ts               # WebviewProtocol, GroupedFindings
+├── errors/
+│   └── SidebarErrors.ts           # Custom error hierarchy
+└── extension.ts                    # Command registration
+```
+
+### Integration Points
+
+**ServiceContainer Registration:**
+```typescript
+// Step 6: NavigationService (before SidebarProvider)
+const navigationService = new NavigationService(logger);
+
+// Step 7: ErrorHandler (before SidebarProvider)
+const errorHandler = new ErrorHandler(logger);
+
+// Step 8: SidebarProvider (with all dependencies)
+const sidebarProvider = new SidebarProvider(
+  context,
+  findingsStore,
+  navigationService,
+  errorHandler,
+  logger
+);
+```
+
+### Design Patterns Applied
+
+1. **Dependency Injection** - Services injected via constructor
+2. **Observer Pattern** - FindingsStore → SidebarProvider updates
+3. **Strategy Pattern** - NavigationService handles different path types
+4. **Factory Pattern** - ServiceContainer creates configured services
+5. **Command Pattern** - VS Code commands for sidebar actions
+
+### Testing Benefits
+
+**Before:**
+- Hard to test due to mixed concerns
+- Direct VS Code API calls can't be mocked
+- No isolation between components
+
+**After:**
+- Services can be unit tested in isolation
+- Mock `INavigationService` for UI tests
+- Mock `FindingsStore` for integration tests
+- Clear interfaces enable comprehensive testing
+
+### Migration from Initial Implementation
+
+**Phase 1: Type Safety**
+- ✅ Centralized message protocol types
+- ✅ Removed type casts (`as any`)
+- ✅ Added `GroupedFindings` interface
+
+**Phase 2: Service Extraction**
+- ✅ Created `NavigationService`
+- ✅ Extracted file opening logic
+- ✅ Updated `SidebarProvider` to delegate
+
+**Phase 3: Command Architecture**
+- ✅ Added `project-tea.sidebar.refresh` command
+- ✅ Registered in `package.json`
+- ✅ Implemented command handler
+
+**Phase 4: Error Handling**
+- ✅ Created custom error hierarchy
+- ✅ Updated services to throw typed errors
+- ✅ Integrated `ErrorHandler` service
+
+### Reference Implementation
+
+The refactored sidebar serves as a **reference implementation** for future webview components, demonstrating:
+
+- Proper separation of concerns
+- Type-safe extension ↔ webview communication
+- Service-based architecture
+- Custom error handling
+- Command integration
+- Observer pattern for reactive updates
+- Performance optimizations
+- Resource cleanup patterns
+
+---
 
 ## 🤝 Need Help?
 

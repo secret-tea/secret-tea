@@ -4,8 +4,10 @@ import { GitleaksOutputParser } from '../parsers/GitleaksOutputParser';
 import { Logger } from './Logger';
 import { GitleaksExecutor } from './GitleaksExecutor';
 import { ScanService } from './ScanService';
+import { NavigationService } from './NavigationService';
 import { DiagnosticsUI } from '../ui/DiagnosticsUI';
 import { StatusBarUI } from '../ui/StatusBarUI';
+import { SidebarProvider } from '../ui/SidebarProvider';
 import { ErrorHandler } from './ErrorHandler';
 import { ILogger, LogLevel } from './interfaces';
 
@@ -56,12 +58,28 @@ export class ServiceContainer {
       const statusBarUI = new StatusBarUI(this.context, findingsStore);
       this.register('statusBarUI', statusBarUI);
 
-      // 6. Create error handler (depends on logger and statusBarUI)
+      // 6. Create navigation service (depends on logger)
+      this.logger.info('Creating NavigationService...');
+      const navigationService = new NavigationService(this.logger);
+      this.register('navigationService', navigationService);
+
+      // 7. Create error handler (depends on logger and statusBarUI)
       this.logger.info('Creating ErrorHandler...');
       const errorHandler = new ErrorHandler(this.logger, statusBarUI);
       this.register('errorHandler', errorHandler);
 
-      // 7. Create scan service (depends on executor, parser, store, UI, logger)
+      // 8. Create sidebar provider (depends on context, findingsStore, navigationService, errorHandler, logger)
+      this.logger.info('Creating SidebarProvider...');
+      const sidebarProvider = new SidebarProvider(
+        this.context.extensionUri,
+        findingsStore,
+        navigationService,
+        errorHandler,
+        this.logger
+      );
+      this.register('sidebarProvider', sidebarProvider);
+
+      // 9. Create scan service (depends on executor, parser, store, UI, logger)
       this.logger.info('Creating ScanService...');
       const scanService = new ScanService(
         executor,

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2020", "DOM"],
+    "module": "ES2020",
+    "target": "ES2020",
+    "outDir": "./out/webview",
+    "rootDir": "./src/webview",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "strict": true
+  },
+  "include": ["src/webview/**/*"],
+  "exclude": ["node_modules"]
+}

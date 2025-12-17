@@ -220,3 +220,47 @@ export interface ScanResult {
    */
   errors?: Error[];
 }
+
+/**
+ * Sidebar-specific types
+ */
+export interface GroupedFindings {
+  [filePath: string]: WorkspaceFinding[];
+}
+
+/**
+ * Webview Protocol - Type-safe message passing between extension and webview
+ */
+export namespace WebviewProtocol {
+  /**
+   * Messages sent from webview to extension
+   */
+  export type ToExtension =
+    | { type: 'requestSecrets' }
+    | { type: 'refresh' }
+    | { type: 'scanHistory' }
+    | { type: 'openFile'; file: string; line: number }
+    | { type: 'ready' };
+
+  /**
+   * Messages sent from extension to webview
+   */
+  export type ToWebview =
+    | { type: 'updateSecrets'; data: GroupedFindings; timestamp: number }
+    | { type: 'error'; message: string };
+}
+
+/**
+ * Sidebar UI interface
+ */
+export interface ISidebarUI extends vscode.WebviewViewProvider {
+  /**
+   * Refresh the sidebar with latest findings
+   */
+  refresh(): void;
+
+  /**
+   * Dispose of resources
+   */
+  dispose(): void;
+}
