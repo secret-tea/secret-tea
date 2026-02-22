@@ -16,11 +16,6 @@ export class ScanService {
     this.logger.info('ScanService initialized');
   }
 
-  /**
-   * Scan a single file for secrets
-   * @param filePath Absolute path to the file
-   * @returns Array of findings
-   */
   async scanFile(filePath: string): Promise<WorkspaceFinding[]> {
     this.logger.info(`Scanning file: ${filePath}`);
     const startTime = Date.now();
@@ -54,20 +49,13 @@ export class ScanService {
     }
   }
 
-  /**
-   * Scan entire workspace for secrets
-   * @param workspacePath Path to workspace directory
-   * @returns Array of findings
-   */
   async scanWorkspace(workspacePath: string): Promise<WorkspaceFinding[]> {
     this.logger.info(`Scanning workspace: ${workspacePath}`);
     const startTime = Date.now();
 
     try {
-      // Execute scan
       const output = await this.executor.executeWorkspace(workspacePath);
 
-      // Parse results
       const findings = this.parser.parseWorkspaceScan(output);
 
       const duration = Date.now() - startTime;
@@ -95,20 +83,13 @@ export class ScanService {
     }
   }
 
-  /**
-   * Scan git repository history for secrets
-   * @param workspacePath Path to workspace directory
-   * @returns Array of historical findings
-   */
   async scanHistory(workspacePath: string): Promise<HistoryFinding[]> {
     this.logger.info(`Scanning git history: ${workspacePath}`);
     const startTime = Date.now();
 
     try {
-      // Execute scan
       const output = await this.executor.executeHistory(workspacePath);
 
-      // Parse results
       const findings = this.parser.parseHistoryScan(output);
 
       const duration = Date.now() - startTime;
@@ -146,9 +127,6 @@ export class ScanService {
     return grouped;
   }
 
-  /**
-   * Get current findings count
-   */
   getFindingsCount(): { workspace: number; history: number } {
     return {
       workspace: this.findingsStore.getWorkspaceFindingsCount(),
@@ -156,9 +134,6 @@ export class ScanService {
     };
   }
 
-  /**
-   * Clear all findings
-   */
   clearAllFindings(): void {
     this.logger.info('Clearing all findings');
     this.findingsStore.clearAll();

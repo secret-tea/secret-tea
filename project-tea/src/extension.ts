@@ -2,32 +2,24 @@ import * as vscode from 'vscode';
 import { ServiceContainer } from './services/ServiceContainer';
 import { ScanService } from './services/ScanService';
 import { FindingsStore } from './stores/FindingsStore';
-import { ILogger, IStatusBarUI, ISidebarUI } from './services/interfaces';
+import { ILogger, ISidebarUI, IStatusBarUI } from './services/interfaces';
 import { ErrorHandler } from './services/ErrorHandler';
 import { UpdateSummary } from './summary';
 
-let container: ServiceContainer;
+let service: ServiceContainer;
 
-/**
- * Extension activation
- * Called when the extension is activated
- */
 export async function activate(context: vscode.ExtensionContext) {
 	try {
-		// Initialize service container
-		container = new ServiceContainer(context);
-		await container.initialize();
+		service = new ServiceContainer(context);
 
-		const logger = container.get<ILogger>('logger');
-		const scanService = container.get<ScanService>('scanService');
-		const findingsStore = container.get<FindingsStore>('findingsStore');
-		const statusBarUI = container.get<IStatusBarUI>('statusBarUI');
-		const sidebarProvider = container.get<ISidebarUI>('sidebarProvider');
-		const errorHandler = container.get<ErrorHandler>('errorHandler');
+		const logger = service.get<ILogger>('logger');
+		const scanService = service.get<ScanService>('scanService');
+		const findingsStore = service.get<FindingsStore>('findingsStore');
+		const statusBarUI = service.get<IStatusBarUI>('statusBarUI');
+		const sidebarProvider = service.get<ISidebarUI>('sidebarProvider');
+		const errorHandler = service.get<ErrorHandler>('errorHandler');
 
 		logger.info('Registering sidebar view...');
-
-		// Register sidebar webview provider
 		context.subscriptions.push(
 			vscode.window.registerWebviewViewProvider(
 				'project-tea-sidebar',
@@ -35,9 +27,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			)
 		);
 
-		logger.info('Registering commands...');
-
-		// Get workspace folder
+		logger.info(`Getting workspace folder...`);
 		const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 		if (!workspaceFolder) {
 			logger.warn('No workspace folder found');
@@ -45,9 +35,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		logger.info(`Workspace folder: ${workspaceFolder}`);
-
-		// Register commands
+		logger.info('Registering commands...');
 		const scanCurrentWorkspaceCommand = vscode.commands.registerCommand(
 			'project-tea.scanCurrentWorkspace',
 			async () => {
@@ -101,11 +89,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		context.subscriptions.push(scanRepoHistoryCommand);
 		context.subscriptions.push(showOutputCommand);
 		context.subscriptions.push(refreshSidebarCommand);
-
-		// Register document save handler
 		context.subscriptions.push(
 			vscode.workspace.onDidSaveTextDocument(async (document) => {
-				await handleDocumentSave(document, scanService, workspaceFolder, logger, errorHandler);
+				await handleDocumentSave(document, scanService, workspaceFolder, errorHandler);
 			})
 		);
 
@@ -113,7 +99,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		logger.info('Extension activation complete');
 	} catch (error) {
-		console.error('Failed to activate Secret Tea extension:', error);
 		vscode.window.showErrorMessage(
 			`Failed to activate Secret Tea: ${error instanceof Error ? error.message : String(error)}`
 		);
@@ -121,15 +106,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 }
 
-/**
- * Handle document save event
- * Scans only the saved file for better performance
- */
 async function handleDocumentSave(
 	document: vscode.TextDocument,
 	scanService: ScanService,
 	workspaceFolder: string,
-	logger: ILogger,
 	errorHandler: ErrorHandler
 ): Promise<void> {
 	// Skip certain file schemes
@@ -143,17 +123,14 @@ async function handleDocumentSave(
 		return;
 	}
 
-	// Get the file path
-	const filePath = document.uri.fsPath;
-
 	// Skip files outside workspace
+	const filePath = document.uri.fsPath;
 	if (!filePath.startsWith(workspaceFolder)) {
 		return;
 	}
 
 	try {
-		logger.debug(`Document saved: ${filePath}`);
-		// Scan only the saved file (much faster than scanning entire workspace)
+		// Scan only the saved file
 		await scanService.scanFile(filePath);
 	} catch (error) {
 		// Handle errors silently for file saves (no popup for every save)
@@ -172,7 +149,6 @@ function performInitialScan(
 			logger.info('Starting background workspace scan');
 			const startTime = Date.now();
 
-			// Run scan in background - no UI indication
 			const findings = await scanService.scanWorkspace(workspacePath);
 
 			const duration = Date.now() - startTime;
@@ -187,13 +163,9 @@ function performInitialScan(
 	})();
 }
 
-/**
- * Extension deactivation
- * Called when the extension is deactivated
- */
 export function deactivate() {
-	if (container) {
-		container.dispose();
+	if (service) {
+		service.dispose();
 	}
 }
 

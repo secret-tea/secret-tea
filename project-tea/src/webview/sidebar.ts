@@ -1,8 +1,3 @@
-/**
- * Sidebar webview client-side script
- * Optimized for performance with efficient DOM updates and event delegation
- */
-
 // VS Code API
 declare const vscode: {
   postMessage(message: any): void;

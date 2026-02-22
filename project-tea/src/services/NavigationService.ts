@@ -7,46 +7,32 @@ import {
   WorkspaceNotFoundError
 } from '../errors/SidebarErrors';
 
-/**
- * Service for handling file navigation and opening
- * Extracted from UI layer to maintain separation of concerns
- */
+// NavigationService handling file navigation and opening.
 export class NavigationService {
   constructor(private readonly logger: ILogger) {}
 
-  /**
-   * Open a file at a specific line with proper error handling
-   * @param filePath File path (absolute, relative, or URI)
-   * @param line Line number (1-based)
-   * @param workspaceFolder Workspace folder for resolving relative paths
-   */
   async openFileAtLine(
     filePath: string,
     line: number,
     workspaceFolder?: vscode.WorkspaceFolder
   ): Promise<void> {
     try {
-      // Resolve file URI
       const uri = this.resolveFileUri(filePath, workspaceFolder);
 
-      // Validate file exists
       const exists = await this.validateFileExists(uri);
       if (!exists) {
         throw new FileNotFoundError(uri.fsPath);
       }
 
-      // Open and navigate to line
       await this.openAndNavigate(uri, line);
 
       this.logger.info(`Opened file ${uri.fsPath} at line ${line}`);
     } catch (error) {
-      // If it's already a navigation error, just re-throw it
       if (error instanceof FileNavigationError) {
         this.logger.error(error.message, error);
         throw error;
       }
 
-      // Wrap other errors as FileNavigationError
       const navError = new FileNavigationError(
         filePath,
         line,
@@ -90,9 +76,6 @@ export class NavigationService {
     throw new WorkspaceNotFoundError();
   }
 
-  /**
-   * Validate that a file exists
-   */
   private async validateFileExists(uri: vscode.Uri): Promise<boolean> {
     try {
       await vscode.workspace.fs.stat(uri);
@@ -102,11 +85,7 @@ export class NavigationService {
     }
   }
 
-  /**
-   * Open document and navigate to specific line
-   */
   private async openAndNavigate(uri: vscode.Uri, line: number): Promise<void> {
-    // Open the document
     const document = await vscode.workspace.openTextDocument(uri);
 
     // Calculate safe line position (0-based)

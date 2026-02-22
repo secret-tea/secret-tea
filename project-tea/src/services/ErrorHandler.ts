@@ -22,16 +22,10 @@ export class ErrorHandler {
     private statusBar: IStatusBarUI
   ) {}
 
-  /**
-   * Handle an error that occurred during extension operation
-   * @param error The error to handle
-   * @param context Description of where the error occurred
-   */
   handle(error: Error, context: string): void {
-    // Log the error details
     this.logger.error(`Error in ${context}`, error);
 
-    // Determine error type and handle appropriately
+    // TODO: Need to improve performance here
     if (error instanceof ExecutableNotFoundError) {
       this.handleCriticalError(error, context);
     } else if (error instanceof InvalidStateError) {

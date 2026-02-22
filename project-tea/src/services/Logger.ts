@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
 import { ILogger, LogLevel } from './interfaces';
 
-/**
- * Logger service using VS Code output channel
- * Provides structured logging with different log levels
- */
+// Logger service provides logging with different log levels
 export class Logger implements ILogger {
   private outputChannel: vscode.OutputChannel;
   private logLevel: LogLevel;
@@ -15,36 +12,24 @@ export class Logger implements ILogger {
     context.subscriptions.push(this.outputChannel);
   }
 
-  /**
-   * Log debug message (only if log level is Debug)
-   */
   debug(message: string, data?: any): void {
     if (this.logLevel <= LogLevel.Debug) {
       this.log('DEBUG', message, data);
     }
   }
 
-  /**
-   * Log info message (only if log level is Info or lower)
-   */
   info(message: string, data?: any): void {
     if (this.logLevel <= LogLevel.Info) {
       this.log('INFO', message, data);
     }
   }
 
-  /**
-   * Log warning message (only if log level is Warn or lower)
-   */
   warn(message: string, data?: any): void {
     if (this.logLevel <= LogLevel.Warn) {
       this.log('WARN', message, data);
     }
   }
 
-  /**
-   * Log error message (always logged)
-   */
   error(message: string, error?: Error): void {
     if (this.logLevel <= LogLevel.Error) {
       this.log('ERROR', message, error);
@@ -54,23 +39,14 @@ export class Logger implements ILogger {
     }
   }
 
-  /**
-   * Show the output channel
-   */
   show(): void {
     this.outputChannel.show();
   }
 
-  /**
-   * Dispose of resources
-   */
   dispose(): void {
     this.outputChannel.dispose();
   }
 
-  /**
-   * Internal logging method
-   */
   private log(level: string, message: string, data?: any): void {
     const timestamp = new Date().toISOString();
     this.outputChannel.appendLine(`[${timestamp}] [${level}] ${message}`);
@@ -89,17 +65,11 @@ export class Logger implements ILogger {
     }
   }
 
-  /**
-   * Set log level
-   */
   setLogLevel(level: LogLevel): void {
     this.logLevel = level;
     this.info(`Log level changed to ${LogLevel[level]}`);
   }
 
-  /**
-   * Get current log level
-   */
   getLogLevel(): LogLevel {
     return this.logLevel;
   }

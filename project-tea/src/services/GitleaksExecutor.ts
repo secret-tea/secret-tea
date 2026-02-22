@@ -7,10 +7,7 @@ import { ExecutableNotFoundError, ExecutionError, GitRepositoryError } from '../
 
 const execAsync = promisify(exec);
 
-/**
- * Service for executing Gitleaks binary
- * Handles platform detection, path resolution, and command execution
- */
+// Service for executing Gitleaks binary
 export class GitleaksExecutor implements IGitleaksExecutor {
   private executablePath: string;
 
@@ -19,36 +16,24 @@ export class GitleaksExecutor implements IGitleaksExecutor {
     this.logger.info(`Gitleaks executable path: ${this.executablePath}`);
   }
 
-  /**
-   * Execute scan on a single file
-   */
   async executeSingleFile(filePath: string): Promise<string> {
     this.logger.debug(`Executing single file scan: ${filePath}`);
     const command = this.buildCommand('file', filePath);
     return this.execute(command);
   }
 
-  /**
-   * Execute scan on entire workspace
-   */
   async executeWorkspace(workspacePath: string): Promise<string> {
     this.logger.debug(`Executing workspace scan: ${workspacePath}`);
     const command = this.buildCommand('workspace', workspacePath);
     return this.execute(command);
   }
 
-  /**
-   * Execute scan on git repository history
-   */
   async executeHistory(workspacePath: string): Promise<string> {
     this.logger.debug(`Executing history scan: ${workspacePath}`);
     const command = this.buildCommand('history', workspacePath);
     return this.execute(command, { cwd: workspacePath });
   }
 
-  /**
-   * Execute gitleaks command
-   */
   private async execute(command: string, options: { cwd?: string } = {}): Promise<string> {
     const startTime = Date.now();
 
@@ -99,9 +84,6 @@ export class GitleaksExecutor implements IGitleaksExecutor {
     }
   }
 
-  /**
-   * Build gitleaks command based on scan mode
-   */
   private buildCommand(mode: 'file' | 'workspace' | 'history', targetPath: string): string {
     const baseFlags = '--log-level error --no-banner --no-color -v';
 
@@ -120,9 +102,6 @@ export class GitleaksExecutor implements IGitleaksExecutor {
     }
   }
 
-  /**
-   * Resolve path to gitleaks executable
-   */
   private resolveExecutablePath(): string {
     const executablePrefix = this.getExecutablePrefix();
 
@@ -175,9 +154,6 @@ export class GitleaksExecutor implements IGitleaksExecutor {
     return executableName + extension;
   }
 
-  /**
-   * Get the executable path (for testing/debugging)
-   */
   getExecutablePath(): string {
     return this.executablePath;
   }

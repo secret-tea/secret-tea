@@ -1,18 +1,10 @@
 import { HistoryFinding, WorkspaceFinding } from '../services/interfaces';
 
-/**
- * Parser for Gitleaks command-line output
- * Converts raw text output into structured Finding objects
- */
+// GitleaksOutputParser converts raw text output into structured Finding objects
 export class GitleaksOutputParser {
-  /**
-   * Parse output from workspace scan (gitleaks detect --source)
-   * @param output Raw stdout from gitleaks command
-   * @returns Array of findings with file, line, secret, and ruleID
-   */
-  parseWorkspaceScan(output: string): WorkspaceFinding[] {
+  parseWorkspaceScan(scanResult: string): WorkspaceFinding[] {
     const findings: WorkspaceFinding[] = [];
-    const blocks = this.splitIntoBlocks(output);
+    const blocks = this.splitIntoBlocks(scanResult);
 
     for (const block of blocks) {
       const finding = this.parseWorkspaceBlock(block);
@@ -24,14 +16,9 @@ export class GitleaksOutputParser {
     return findings;
   }
 
-  /**
-   * Parse output from history scan (gitleaks detect with git)
-   * @param output Raw stdout from gitleaks command
-   * @returns Array of historical findings with commit info
-   */
-  parseHistoryScan(output: string): HistoryFinding[] {
+  parseHistoryScan(scanResult: string): HistoryFinding[] {
     const findings: HistoryFinding[] = [];
-    const blocks = this.splitIntoBlocks(output);
+    const blocks = this.splitIntoBlocks(scanResult);
 
     for (const block of blocks) {
       const finding = this.parseHistoryBlock(block);
@@ -43,20 +30,15 @@ export class GitleaksOutputParser {
     return findings;
   }
 
-  /**
-   * Split output into individual finding blocks
-   * Findings are separated by double newlines
-   */
+  // Split scan result into individual finding blocks
   private splitIntoBlocks(output: string): string[] {
     if (!output || output.trim().length === 0) {
       return [];
     }
+    // Findings are separated by double newlines
     return output.split(/\n\n/g).filter(block => block.includes('Finding:'));
   }
 
-  /**
-   * Parse a single workspace finding block
-   */
   private parseWorkspaceBlock(block: string): WorkspaceFinding | null {
     const secret = this.extractField(block, 'Secret');
     const file = this.extractField(block, 'File');
@@ -76,9 +58,6 @@ export class GitleaksOutputParser {
     };
   }
 
-  /**
-   * Parse a single history finding block with commit information
-   */
   private parseHistoryBlock(block: string): HistoryFinding | null {
     const secret = this.extractField(block, 'Secret');
     const file = this.extractField(block, 'File');
@@ -111,10 +90,6 @@ export class GitleaksOutputParser {
     };
   }
 
-  /**
-   * Extract a field value from a block of text
-   * Format: "FieldName: value"
-   */
   private extractField(block: string, fieldName: string): string | null {
     const regex = new RegExp(`${fieldName}:\\s+(.+?)(?=\\n|$)`, 'm');
     const match = block.match(regex);
