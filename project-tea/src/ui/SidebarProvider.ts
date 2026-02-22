@@ -5,11 +5,6 @@ import { NavigationService } from '../services/NavigationService';
 import { ErrorHandler } from '../services/ErrorHandler';
 import { WebviewCommunicationError } from '../errors/SidebarErrors';
 
-/**
- * Optimized sidebar provider with proper resource management
- * Implements observer pattern for automatic updates from FindingsStore
- * Follows VS Code best practices for webview providers
- */
 export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
   private view?: vscode.WebviewView;
   private disposables: vscode.Disposable[] = [];

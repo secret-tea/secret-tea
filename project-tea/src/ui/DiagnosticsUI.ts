@@ -22,18 +22,12 @@ export class DiagnosticsUI implements IDiagnosticsUI {
     context.subscriptions.push(this.decorationType);
   }
 
-  /**
-   * Update diagnostics for a file
-   */
   updateDiagnostics(filePath: string, findings: WorkspaceFinding[]): void {
     const uri = vscode.Uri.file(filePath);
     const diagnostics = findings.map(f => this.createDiagnostic(f));
     this.collection.set(uri, diagnostics);
   }
 
-  /**
-   * Clear diagnostics for a file or all files
-   */
   clearDiagnostics(filePath?: string): void {
     if (filePath) {
       const uri = vscode.Uri.file(filePath);
@@ -54,9 +48,6 @@ export class DiagnosticsUI implements IDiagnosticsUI {
     }
   }
 
-  /**
-   * Highlight findings in the editor
-   */
   highlightFindings(filePath: string, findings: WorkspaceFinding[]): void {
     // Find the editor for this file
     const editor = this.findEditor(filePath);
@@ -93,9 +84,6 @@ export class DiagnosticsUI implements IDiagnosticsUI {
     editor.setDecorations(decoration, decorations);
   }
 
-  /**
-   * Create a VS Code diagnostic from a finding
-   */
   private createDiagnostic(finding: WorkspaceFinding): vscode.Diagnostic {
     const range = new vscode.Range(
       new vscode.Position(finding.line, 0),
@@ -114,9 +102,6 @@ export class DiagnosticsUI implements IDiagnosticsUI {
     return diagnostic;
   }
 
-  /**
-   * Find the editor for a given file path
-   */
   private findEditor(filePath: string): vscode.TextEditor | undefined {
     const uri = vscode.Uri.file(filePath).toString();
     return vscode.window.visibleTextEditors.find(
@@ -124,9 +109,6 @@ export class DiagnosticsUI implements IDiagnosticsUI {
     );
   }
 
-  /**
-   * Dispose of resources
-   */
   dispose(): void {
     this.collection.dispose();
     this.decorationType.dispose();

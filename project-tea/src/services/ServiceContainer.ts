@@ -11,64 +11,79 @@ import { SidebarProvider } from '../ui/SidebarProvider';
 import { ErrorHandler } from './ErrorHandler';
 import { ILogger, LogLevel } from './interfaces';
 
+export const ServiceNames = {
+  LOGGER: 'logger',
+  FINDINGS_STORE: 'findingsStore',
+  EXECUTOR: 'executor',
+  PARSER: 'parser',
+  DIAGNOSTICS_UI: 'diagnosticsUI',
+  STATUS_BAR_UI: 'statusBarUI',
+  NAVIGATION_SERVICE: 'navigationService',
+  ERROR_HANDLER: 'errorHandler',
+  SIDEBAR_PROVIDER: 'sidebarProvider',
+  SCAN_SERVICE: 'scanService',
+} as const;
+
 /**
  * Service container for dependency injection
  * Manages service lifecycle and provides centralized access to services
  */
-export class ServiceContainer {
+interface IServiceContainer {
+  get<T>(name: string): T;
+  register(name: string, service: any): void;
+}
+
+export class ServiceContainer implements IServiceContainer {
   private services = new Map<string, any>();
   private logger!: ILogger;
+  constructor(private context: vscode.ExtensionContext) {
+    this.initialize();
+  }
 
-  constructor(private context: vscode.ExtensionContext) {}
-
-  /**
-   * Initialize all services
-   * Services are created in dependency order
-   */
-  async initialize(): Promise<void> {
+  private async initialize(): Promise<void> {
     try {
-      // 1. Create logger first (no dependencies)
+      // 1. Create logger
       this.logger = new Logger(this.context, LogLevel.Info);
-      this.register('logger', this.logger);
+      this.register(ServiceNames.LOGGER, this.logger);
       this.logger.info('='.repeat(50));
       this.logger.info('Secret Tea Extension Initializing');
       this.logger.info('='.repeat(50));
 
-      // 2. Create stores (no dependencies)
+      // 2. Create stores
       this.logger.info('Creating FindingsStore...');
       const findingsStore = new FindingsStore();
-      this.register('findingsStore', findingsStore);
+      this.register(ServiceNames.FINDINGS_STORE, findingsStore);
 
-      // 3. Create executor (depends on logger)
+      // 3. Create executor
       this.logger.info('Creating GitleaksExecutor...');
       const executor = new GitleaksExecutor(this.logger);
-      this.register('executor', executor);
+      this.register(ServiceNames.EXECUTOR, executor);
 
-      // 4. Create parser (no dependencies)
+      // 4. Create parser
       this.logger.info('Creating GitleaksOutputParser...');
       const parser = new GitleaksOutputParser();
-      this.register('parser', parser);
+      this.register(ServiceNames.PARSER, parser);
 
-      // 5. Create UI services (depend on context and stores)
+      // 5. Create UI services
       this.logger.info('Creating DiagnosticsUI...');
       const diagnosticsUI = new DiagnosticsUI(this.context);
-      this.register('diagnosticsUI', diagnosticsUI);
+      this.register(ServiceNames.DIAGNOSTICS_UI, diagnosticsUI);
 
       this.logger.info('Creating StatusBarUI...');
       const statusBarUI = new StatusBarUI(this.context, findingsStore);
-      this.register('statusBarUI', statusBarUI);
+      this.register(ServiceNames.STATUS_BAR_UI, statusBarUI);
 
-      // 6. Create navigation service (depends on logger)
+      // 6. Create navigation service
       this.logger.info('Creating NavigationService...');
       const navigationService = new NavigationService(this.logger);
-      this.register('navigationService', navigationService);
+      this.register(ServiceNames.NAVIGATION_SERVICE, navigationService);
 
-      // 7. Create error handler (depends on logger and statusBarUI)
+      // 7. Create error handler
       this.logger.info('Creating ErrorHandler...');
       const errorHandler = new ErrorHandler(this.logger, statusBarUI);
-      this.register('errorHandler', errorHandler);
+      this.register(ServiceNames.ERROR_HANDLER, errorHandler);
 
-      // 8. Create sidebar provider (depends on context, findingsStore, navigationService, errorHandler, logger)
+      // 8. Create sidebar provider
       this.logger.info('Creating SidebarProvider...');
       const sidebarProvider = new SidebarProvider(
         this.context.extensionUri,
@@ -77,9 +92,9 @@ export class ServiceContainer {
         errorHandler,
         this.logger
       );
-      this.register('sidebarProvider', sidebarProvider);
+      this.register(ServiceNames.SIDEBAR_PROVIDER, sidebarProvider);
 
-      // 9. Create scan service (depends on executor, parser, store, UI, logger)
+      // 9. Create scan service
       this.logger.info('Creating ScanService...');
       const scanService = new ScanService(
         executor,
@@ -88,7 +103,7 @@ export class ServiceContainer {
         diagnosticsUI,
         this.logger
       );
-      this.register('scanService', scanService);
+      this.register(ServiceNames.SCAN_SERVICE, scanService);
 
       this.logger.info('='.repeat(50));
       this.logger.info('All services initialized successfully');
@@ -101,16 +116,11 @@ export class ServiceContainer {
     }
   }
 
-  /**
-   * Get a service by name
-   * @param serviceName Name of the service to retrieve
-   * @returns The requested service
-   * @throws Error if service not found
-   */
+  // Get a service by name
   get<T>(serviceName: string): T {
     const service = this.services.get(serviceName);
     if (!service) {
-      const error = new Error(`Service '${serviceName}' not found in container`);
+      const error = new Error(`Service '${serviceName}' not found`);
       if (this.logger) {
         this.logger.error(error.message);
       }
@@ -119,42 +129,19 @@ export class ServiceContainer {
     return service as T;
   }
 
-  /**
-   * Register a service
-   * @param name Service name
-   * @param service Service instance
-   */
-  private register(name: string, service: any): void {
-    if (this.services.has(name)) {
-      const error = new Error(`Service '${name}' is already registered`);
+  // Register a new service
+  register(name: string, service: any): void {
+    if (name == "" || !service) {
+      const error = new Error(`Cannot register null or undefined service '${name}'`);
       if (this.logger) {
         this.logger.error(error.message);
       }
       throw error;
     }
+
     this.services.set(name, service);
   }
 
-  /**
-   * Check if a service is registered
-   * @param serviceName Name of the service
-   * @returns True if service is registered
-   */
-  has(serviceName: string): boolean {
-    return this.services.has(serviceName);
-  }
-
-  /**
-   * Get all registered service names
-   * @returns Array of service names
-   */
-  getServiceNames(): string[] {
-    return Array.from(this.services.keys());
-  }
-
-  /**
-   * Dispose of all services and clean up resources
-   */
   dispose(): void {
     if (this.logger) {
       this.logger.info('='.repeat(50));
@@ -163,7 +150,7 @@ export class ServiceContainer {
     }
 
     // Dispose services in reverse order of creation
-    const serviceNames = this.getServiceNames().reverse();
+    const serviceNames = Array.from(this.services.keys());
 
     for (const name of serviceNames) {
       try {

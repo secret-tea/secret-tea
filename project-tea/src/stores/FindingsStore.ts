@@ -18,7 +18,6 @@ export interface FindingsListener {
 
 /**
  * Centralized store for managing scan findings
- * Replaces global mutable state with proper encapsulation
  * Implements observer pattern for reactive UI updates
  */
 export class FindingsStore {
@@ -26,11 +25,6 @@ export class FindingsStore {
   private historyFindings = new Set<HistoryFinding>();
   private listeners = new Set<FindingsListener>();
 
-  /**
-   * Add a workspace finding for a specific file
-   * @param filePath Absolute path to the file
-   * @param finding The finding to add
-   */
   addWorkspaceFinding(filePath: string, finding: WorkspaceFinding): void {
     if (!this.workspaceFindings.has(filePath)) {
       this.workspaceFindings.set(filePath, new Set());
@@ -39,11 +33,6 @@ export class FindingsStore {
     this.notifyListeners({ type: 'workspace', filePath, finding });
   }
 
-  /**
-   * Add multiple workspace findings for a specific file
-   * @param filePath Absolute path to the file
-   * @param findings Array of findings to add
-   */
   addWorkspaceFindings(filePath: string, findings: WorkspaceFinding[]): void {
     if (!this.workspaceFindings.has(filePath)) {
       this.workspaceFindings.set(filePath, new Set());
@@ -55,20 +44,11 @@ export class FindingsStore {
     });
   }
 
-  /**
-   * Get all workspace findings for a specific file
-   * @param filePath Absolute path to the file
-   * @returns Array of findings for the file
-   */
   getWorkspaceFindingsForFile(filePath: string): WorkspaceFinding[] {
     const findings = this.workspaceFindings.get(filePath);
     return findings ? Array.from(findings) : [];
   }
 
-  /**
-   * Get all workspace findings across all files
-   * @returns Array of all workspace findings
-   */
   getAllWorkspaceFindings(): WorkspaceFinding[] {
     const allFindings: WorkspaceFinding[] = [];
     this.workspaceFindings.forEach(findings => {
@@ -77,11 +57,6 @@ export class FindingsStore {
     return allFindings;
   }
 
-  /**
-   * Get count of workspace findings
-   * @param filePath Optional file path to count findings for specific file
-   * @returns Number of findings
-   */
   getWorkspaceFindingsCount(filePath?: string): number {
     if (filePath) {
       const findings = this.workspaceFindings.get(filePath);
@@ -90,10 +65,6 @@ export class FindingsStore {
     return this.getAllWorkspaceFindings().length;
   }
 
-  /**
-   * Clear workspace findings for a specific file or all files
-   * @param filePath Optional file path. If not provided, clears all findings
-   */
   clearWorkspaceFindings(filePath?: string): void {
     if (filePath) {
       this.workspaceFindings.delete(filePath);
@@ -104,19 +75,11 @@ export class FindingsStore {
     }
   }
 
-  /**
-   * Add a history finding
-   * @param finding The historical finding to add
-   */
   addHistoryFinding(finding: HistoryFinding): void {
     this.historyFindings.add(finding);
     this.notifyListeners({ type: 'history', finding });
   }
 
-  /**
-   * Add multiple history findings
-   * @param findings Array of historical findings to add
-   */
   addHistoryFindings(findings: HistoryFinding[]): void {
     findings.forEach(finding => {
       this.historyFindings.add(finding);
@@ -124,25 +87,14 @@ export class FindingsStore {
     });
   }
 
-  /**
-   * Get all history findings
-   * @returns Array of all historical findings
-   */
   getAllHistoryFindings(): HistoryFinding[] {
     return Array.from(this.historyFindings);
   }
 
-  /**
-   * Get count of history findings
-   * @returns Number of historical findings
-   */
   getHistoryFindingsCount(): number {
     return this.historyFindings.size;
   }
 
-  /**
-   * Clear all history findings
-   */
   clearHistoryFindings(): void {
     this.historyFindings.clear();
     this.notifyListeners({ type: 'history-cleared' });

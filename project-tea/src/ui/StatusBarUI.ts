@@ -32,13 +32,9 @@ export class StatusBarUI implements IStatusBarUI {
       this.update();
     });
 
-    // Initial update
     this.update();
   }
 
-  /**
-   * Update status bar with current findings count
-   */
   update(): void {
     const count = this.findingsStore.getWorkspaceFindingsCount();
 
@@ -54,9 +50,6 @@ export class StatusBarUI implements IStatusBarUI {
     }
   }
 
-  /**
-   * Show error message in status bar
-   */
   showError(message: string = 'Scan failed'): void {
     this.statusBarItem.text = `$(error) ${message}`;
     this.statusBarItem.backgroundColor = this.errorBackground;
@@ -64,9 +57,6 @@ export class StatusBarUI implements IStatusBarUI {
     this.statusBarItem.show();
   }
 
-  /**
-   * Show warning in status bar
-   */
   showWarning(message: string): void {
     this.statusBarItem.text = `$(warning) ${message}`;
     this.statusBarItem.backgroundColor = this.warningBackground;
@@ -74,9 +64,6 @@ export class StatusBarUI implements IStatusBarUI {
     this.statusBarItem.show();
   }
 
-  /**
-   * Dispose of resources
-   */
   dispose(): void {
     if (this.unsubscribe) {
       this.unsubscribe();
