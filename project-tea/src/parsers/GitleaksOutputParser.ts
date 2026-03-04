@@ -30,12 +30,11 @@ export class GitleaksOutputParser {
     return findings;
   }
 
-  // Split scan result into individual finding blocks
   private splitIntoBlocks(output: string): string[] {
     if (!output || output.trim().length === 0) {
       return [];
     }
-    // Findings are separated by double newlines
+
     return output.split(/\n\n/g).filter(block => block.includes('Finding:'));
   }
 

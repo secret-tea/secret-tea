@@ -1,8 +1,5 @@
 import { HistoryFinding, WorkspaceFinding } from '../services/interfaces';
 
-/**
- * Event types emitted by FindingsStore
- */
 export type FindingsEvent =
   | { type: 'workspace'; filePath: string; finding: WorkspaceFinding }
   | { type: 'workspace-cleared'; filePath?: string }
@@ -110,10 +107,6 @@ export class FindingsStore {
     return () => this.listeners.delete(listener);
   }
 
-  /**
-   * Notify all listeners of a change
-   * @param event The event to emit
-   */
   private notifyListeners(event: FindingsEvent): void {
     this.listeners.forEach(listener => {
       try {
@@ -124,27 +117,15 @@ export class FindingsStore {
     });
   }
 
-  /**
-   * Get all files that have findings
-   * @returns Array of file paths
-   */
   getFilesWithFindings(): string[] {
     return Array.from(this.workspaceFindings.keys());
   }
 
-  /**
-   * Check if a file has any findings
-   * @param filePath Absolute path to the file
-   * @returns True if file has findings
-   */
   hasFindings(filePath: string): boolean {
     const findings = this.workspaceFindings.get(filePath);
     return findings ? findings.size > 0 : false;
   }
 
-  /**
-   * Clear all findings (workspace and history)
-   */
   clearAll(): void {
     this.clearWorkspaceFindings();
     this.clearHistoryFindings();
