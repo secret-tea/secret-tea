@@ -7,32 +7,35 @@
 ### 1. Architecture Transformation
 
 **Before**: Monolithic functions with global state
-**After**: Service-based architecture with dependency injection
+**After**: Service-based architecture with command isolation and dependency injection
 
 ```Text
 Old Structure:                    New Structure:
-├── extension.ts                 ├── extension.ts (entry point)
-├── commands.ts                  ├── services/
-├── utils/gitleaks.ts            │   ├── ServiceContainer.ts
-├── statusBar.ts                 │   ├── GitleaksExecutor.ts
-├── diagnostics.ts               │   ├── ScanService.ts
-└── interface.ts                 │   ├── NavigationService.ts
-                                 │   ├── Logger.ts
-                                 │   ├── ErrorHandler.ts
-                                 │   └── interfaces.ts
-                                 ├── stores/
-                                 │   └── FindingsStore.ts
-                                 ├── ui/
-                                 │   ├── DiagnosticsUI.ts
-                                 │   ├── StatusBarUI.ts
-                                 │   └── SidebarProvider.ts
-                                 ├── webview/
-                                 │   └── sidebar.ts
-                                 ├── parsers/
-                                 │   └── GitleaksOutputParser.ts
-                                 └── errors/
-                                     ├── CustomErrors.ts
-                                     └── SidebarErrors.ts
+├── extension.ts                 ├── extension.ts (Bootstrap)
+├── summary.ts                   ├── commands/
+├── services/                    │   └── CommandManager.ts (Command isolation)
+│   ├── ServiceContainer.ts      ├── services/
+│   ├── GitleaksExecutor.ts      │   ├── ServiceContainer.ts
+│   ├── ScanService.ts           │   ├── GitleaksExecutor.ts
+│   ├── ScanService.ts           │   ├── ScanService.ts
+│   ├── NavigationService.ts     │   ├── NavigationService.ts
+│   ├── Logger.ts                │   ├── Logger.ts
+│   ├── ErrorHandler.ts          │   ├── ErrorHandler.ts
+│   └── interfaces.ts            │   └── interfaces.ts
+├── stores/                      ├── stores/
+│   └── FindingsStore.ts         │   └── FindingsStore.ts
+├── ui/                          ├── ui/
+│   ├── DiagnosticsUI.ts         │   ├── DiagnosticsUI.ts
+│   ├── StatusBarUI.ts           │   ├── StatusBarUI.ts
+│   └── SidebarProvider.ts       │   ├── SidebarProvider.ts
+│                                │   └── SummaryPanel.ts (Moved from src/summary.ts)
+├── webview/                     ├── webview/
+│   └── sidebar.ts               │   └── sidebar.ts
+├── parsers/                     ├── parsers/
+│   └── GitleaksOutputParser.ts  │   └── GitleaksOutputParser.ts
+└── errors/                      └── errors/
+    ├── CustomErrors.ts              ├── CustomErrors.ts
+    └── SidebarErrors.ts             └── SidebarErrors.ts
 ```
 
 ## 🏗️ Architecture Overview
@@ -43,9 +46,10 @@ The extension follows a **service-based architecture** with these key principles
 
 1. **Dependency Injection**: Services receive dependencies through constructors
 2. **Single Responsibility**: Each service has one clear purpose
-3. **Interface Segregation**: Clear contracts between components
-4. **Separation of Concerns**: UI, business logic, and data are separated
-5. **Observable State**: Reactive updates via observer pattern
+3. **Command Manager**: Decouples command registration and logic from the entry point
+4. **Interface Segregation**: Clear contracts between components
+5. **Separation of Concerns**: UI, business logic, and data are separated
+6. **Observable State**: Reactive updates via observer pattern
 
 ### Architecture Layers
 
@@ -64,9 +68,9 @@ The extension follows a **service-based architecture** with these key principles
 │  • Provides singleton access                │
 └─────────────────────────────────────────────┘
                      │
-        ┌────────────┼────────────┐
-        │            │            │
-        ▼            ▼            ▼
+         ┌───────────┼────────────┐
+         │           │            │
+         ▼           ▼            ▼
 ┌─────────────┐ ┌─────────┐ ┌────────────┐
 │   Services  │ │  Stores │ │   UI       │
 │   Layer     │ │  Layer  │ │   Layer    │
@@ -74,13 +78,15 @@ The extension follows a **service-based architecture** with these key principles
 │ • Executor  │ │ • Store │ │ • Diag UI  │
 │ • Scanner   │ │         │ │ • Status   │
 │ • Logger    │ │         │ │   Bar      │
-│ • Error     │ │         │ │            │
+│ • Error     │ │         │ │ • Sidebar  │
+│             │ │         │ │ • Summary  │
 └─────────────┘ └─────────┘ └────────────┘
         │            │            │
         └────────────┼────────────┘
                      ▼
 ┌─────────────────────────────────────────────┐
 │              Support Layer                  │
+│  • Command Manager                          │
 │  • Parsers                                  │
 │  • Error Types                              │
 │  • Interfaces                               │
@@ -96,7 +102,9 @@ The extension follows a **service-based architecture** with these key principles
 ```Text
 src/
 ├── extension.ts              # Entry point - activation & deactivation
-├── commands.ts               # Command registrations
+│
+├── commands/                 # Command isolation layer
+│   └── CommandManager.ts     # Command registrations and handlers
 │
 ├── services/                 # Business logic services
 │   ├── interfaces.ts         # ⭐ ALL interfaces and types
@@ -112,7 +120,8 @@ src/
 ├── ui/                       # UI components
 │   ├── DiagnosticsUI.ts      # Code diagnostics & decorations
 │   ├── StatusBarUI.ts        # Status bar management
-│   └── SidebarProvider.ts    # Sidebar webview provider
+│   ├── SidebarProvider.ts    # Sidebar webview provider
+│   └── SummaryPanel.ts       # Secrets summary webview panel
 │
 ├── webview/                  # Webview client-side code
 │   └── sidebar.ts            # Sidebar webview UI logic
@@ -128,14 +137,10 @@ src/
 │   ├── summary-empty.html    # Empty state template
 │   └── summary-table.html    # Findings table template
 │
-├── services/                 # Template rendering
-│   └── TemplateEngine.ts     # Template engine with XSS protection
-│
-└── __tests__/                # Test files (mirror src structure)
-    ├── services/
-    ├── stores/
-    └── ui/
+└── services/                 # Template rendering
+    └── TemplateEngine.ts     # Template engine with XSS protection
 ```
+
 
 ### 2. Interface Consolidation
 

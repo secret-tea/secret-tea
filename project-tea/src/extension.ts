@@ -1,25 +1,26 @@
 import * as vscode from 'vscode';
 import { ServiceContainer } from './services/ServiceContainer';
 import { ScanService } from './services/ScanService';
-import { FindingsStore } from './stores/FindingsStore';
-import { ILogger, ISidebarUI, IStatusBarUI } from './services/interfaces';
+import { ILogger, ISidebarUI } from './services/interfaces';
 import { ErrorHandler } from './services/ErrorHandler';
-import { UpdateSummary } from './summary';
+import { CommandManager } from './commands/CommandManager';
 
 let service: ServiceContainer;
 
+/**
+ * Extension entry point.
+ * This function is called when the extension is activated.
+ */
 export async function activate(context: vscode.ExtensionContext) {
 	try {
 		service = new ServiceContainer(context);
 
 		const logger = service.get<ILogger>('logger');
 		const scanService = service.get<ScanService>('scanService');
-		const findingsStore = service.get<FindingsStore>('findingsStore');
-		const statusBarUI = service.get<IStatusBarUI>('statusBarUI');
 		const sidebarProvider = service.get<ISidebarUI>('sidebarProvider');
 		const errorHandler = service.get<ErrorHandler>('errorHandler');
 
-		logger.info('Registering sidebar view...');
+		// Register Sidebar Provider
 		context.subscriptions.push(
 			vscode.window.registerWebviewViewProvider(
 				'project-tea-sidebar',
@@ -27,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			)
 		);
 
-		logger.info(`Getting workspace folder...`);
+		// Determine Workspace Folder
 		const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 		if (!workspaceFolder) {
 			logger.warn('No workspace folder found');
@@ -35,67 +36,18 @@ export async function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		logger.info('Registering commands...');
-		const scanCurrentWorkspaceCommand = vscode.commands.registerCommand(
-			'project-tea.scanCurrentWorkspace',
-			async () => {
-				try {
-					logger.info('Manual workspace scan initiated');
-					vscode.window.showInformationMessage(`Scanning ${workspaceFolder} now`);
-					const findings = await scanService.scanWorkspace(workspaceFolder);
-					vscode.window.showInformationMessage(
-						`Scan complete. Found ${findings.length} secret${findings.length === 1 ? '' : 's'}`
-					);
-				} catch (error) {
-					errorHandler.handle(error as Error, 'workspace scan command');
-				}
-			}
-		);
+		// Register Commands via CommandManager
+		const commandManager = new CommandManager(context, service);
+		commandManager.registerCommands();
 
-		const scanRepoHistoryCommand = vscode.commands.registerCommand(
-			'project-tea.scanRepoHistory',
-			async () => {
-				try {
-					logger.info('History scan initiated');
-					vscode.window.showInformationMessage('Scanning git repo for secrets and preparing report');
-					const findings = await scanService.scanHistory(workspaceFolder);
-					UpdateSummary(context.subscriptions, findingsStore);
-					vscode.window.showInformationMessage(
-						`History scan complete. Found ${findings.length} secret${findings.length === 1 ? '' : 's'} in commit history`
-					);
-				} catch (error) {
-					errorHandler.handle(error as Error, 'history scan command');
-				}
-			}
-		);
-
-		const showOutputCommand = vscode.commands.registerCommand(
-			'project-tea.showOutput',
-			() => {
-				logger.show();
-			}
-		);
-
-		const refreshSidebarCommand = vscode.commands.registerCommand(
-			'project-tea.sidebar.refresh',
-			() => {
-				logger.info('Sidebar refresh command triggered');
-				sidebarProvider.refresh();
-			}
-		);
-
-		// Register commands with context
-		context.subscriptions.push(scanCurrentWorkspaceCommand);
-		context.subscriptions.push(scanRepoHistoryCommand);
-		context.subscriptions.push(showOutputCommand);
-		context.subscriptions.push(refreshSidebarCommand);
+		// Register Event Handlers
 		context.subscriptions.push(
 			vscode.workspace.onDidSaveTextDocument(async (document) => {
 				await handleDocumentSave(document, scanService, workspaceFolder, errorHandler);
 			})
 		);
 
-		performInitialScan(workspaceFolder, scanService, logger, errorHandler)
+		performInitialScan(workspaceFolder, scanService, logger, errorHandler);
 
 		logger.info('Extension activation complete');
 	} catch (error) {
@@ -106,6 +58,9 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 }
 
+/**
+ * Handles document save event by triggering a scan of the saved file.
+ */
 async function handleDocumentSave(
 	document: vscode.TextDocument,
 	scanService: ScanService,
@@ -138,6 +93,9 @@ async function handleDocumentSave(
 	}
 }
 
+/**
+ * Performs an initial scan of the workspace on startup.
+ */
 function performInitialScan(
 	workspacePath: string,
 	scanService: ScanService,
@@ -168,4 +126,3 @@ export function deactivate() {
 		service.dispose();
 	}
 }
-

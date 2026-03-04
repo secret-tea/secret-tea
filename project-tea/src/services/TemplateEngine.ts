@@ -25,11 +25,7 @@ export class TemplateEngine {
     return this.replacePlaceholders(template, data);
   }
 
-  /**
-   * Load a template from file (with caching)
-   * @param templateName Name of the template file (without extension)
-   * @returns Template content as string
-   */
+  // Load a template from file (with caching)
   private loadTemplate(templateName: string): string {
     // Check cache first
     if (this.templateCache.has(templateName)) {
@@ -51,12 +47,7 @@ export class TemplateEngine {
     return template;
   }
 
-  /**
-   * Replace {{placeholders}} in template with actual values
-   * @param template Template string
-   * @param data Data object with values
-   * @returns String with placeholders replaced
-   */
+  // Replace {{placeholders}} in template with actual values
   private replacePlaceholders(template: string, data: Record<string, any>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
       if (key in data) {
@@ -69,19 +60,10 @@ export class TemplateEngine {
     });
   }
 
-  /**
-   * Clear the template cache
-   * Useful for development or when templates are updated
-   */
   clearCache(): void {
     this.templateCache.clear();
   }
 
-  /**
-   * Check if a template exists
-   * @param templateName Name of the template file (without extension)
-   * @returns True if template file exists
-   */
   templateExists(templateName: string): boolean {
     const templatePath = path.join(this.templatesDir, `${templateName}.html`);
     return fs.existsSync(templatePath);

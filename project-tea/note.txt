@@ -1,9 +1,0 @@
-[ ] Open the icon in primary bar and it scan for the current repo
-[x] Scan the current file on save
-[ ] [button] Scan the whole repo's history
-[ ] [button] Scan the current repo's library for malware
-[ ] Click statusbar button and jump to summary page
----
-report:
-* bad: git clutch scan the whole workspace on save which is not ideal since we only deal with one file at a time. This would turn bad quick if we were on autosave and our project is big
-  * tea improve: scan only the save file on save

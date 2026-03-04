@@ -22,9 +22,6 @@ export class SidebarError extends Error {
   }
 }
 
-/**
- * Error thrown when webview communication fails
- */
 export class WebviewCommunicationError extends SidebarError {
   constructor(
     public readonly operation: string,
@@ -39,9 +36,6 @@ export class WebviewCommunicationError extends SidebarError {
   }
 }
 
-/**
- * Error thrown when file navigation fails
- */
 export class FileNavigationError extends SidebarError {
   constructor(
     public readonly filePath: string,
@@ -57,9 +51,6 @@ export class FileNavigationError extends SidebarError {
   }
 }
 
-/**
- * Error thrown when state restoration fails
- */
 export class StateRestorationError extends SidebarError {
   constructor(
     public readonly stateKey: string,
@@ -74,9 +65,6 @@ export class StateRestorationError extends SidebarError {
   }
 }
 
-/**
- * Error thrown when file doesn't exist
- */
 export class FileNotFoundError extends SidebarError {
   constructor(public readonly filePath: string) {
     super(
@@ -88,9 +76,6 @@ export class FileNotFoundError extends SidebarError {
   }
 }
 
-/**
- * Error thrown when workspace is not available
- */
 export class WorkspaceNotFoundError extends SidebarError {
   constructor() {
     super(

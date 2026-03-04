@@ -1,12 +1,14 @@
-# Secret Scanner
+# Secret Tea
 
-This extension helps prevent committing secrets like API keys and passwords into your Git project. It integrates the powerful `gitleaks` tool to scan your workspace for hardcoded credentials. It was created aiming to protect developer from secret leaking without the hassel of setting up too many things.
+Secret Tea is a lightweight VS Code extension designed to protect your project from accidental secret leaks. It provides real-time detection of sensitive information like API keys, tokens, and hardcoded credentials directly within your development workflow.
 
-## Usage
+## 🌟 What it Does
 
-* The current workspace will be scan automatically on saving.
-* To scan for all commit history, use scan button on Side panel
+- **Real-time Protection**: Automatically scans files as you save them, providing instant feedback without slowing down your computer.
+- **Comprehensive Scanning**: Perform deep scans of your entire workspace or your complete Git commit history to find legacy secrets.
+- **Seamless Integration**: Findings appear in the Problems panel, as editor decorations (highlights), and in a dedicated sidebar for easy exploration.
+- **Insights & Reports**: Generates detailed summary reports of all detected secrets.
 
-## How It Works
+## ⚙️ How it Works
 
 This extension is a lightweight wrapper around the `gitleaks` binary. It executes the `gitleaks detect` command against your current workspace and surfaces the findings directly within the VS Code UI, making it easy to identify and remediate potential security risks.
