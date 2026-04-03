@@ -10,7 +10,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
   private disposables: vscode.Disposable[] = [];
   private unsubscribe?: () => void;
   private updateDebounceTimer?: NodeJS.Timeout;
-  private readonly DEBOUNCE_MS = 100; // Debounce updates to avoid excessive rendering
+  private readonly DEBOUNCE_MS = 2000; // Debounce updates to avoid excessive rendering
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -19,7 +19,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     private readonly errorHandler: ErrorHandler,
     private readonly logger: ILogger
   ) {
-    // Subscribe to findings changes with debouncing
     this.unsubscribe = this.findingsStore.subscribe(() => {
       this.debouncedRefresh();
     });
@@ -27,9 +26,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     this.logger.debug('SidebarProvider created');
   }
 
-  /**
-   * Resolve webview view - called when sidebar is opened
-   */
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
@@ -37,7 +33,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
   ): void | Thenable<void> {
     this.view = webviewView;
 
-    // Configure webview options
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [
@@ -47,10 +42,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
       ]
     };
 
-    // Set HTML content
     webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
 
-    // Handle messages from webview
     this.disposables.push(
       webviewView.webview.onDidReceiveMessage(
         (message: WebviewProtocol.ToExtension) => this.handleMessage(message),
@@ -59,7 +52,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
       )
     );
 
-    // Handle visibility changes to avoid unnecessary updates
     this.disposables.push(
       webviewView.onDidChangeVisibility(() => {
         if (webviewView.visible) {
@@ -72,9 +64,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     this.logger.info('Sidebar view resolved');
   }
 
-  /**
-   * Handle messages from webview
-   */
   private async handleMessage(message: WebviewProtocol.ToExtension): Promise<void> {
     try {
       switch (message.type) {
@@ -116,9 +105,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     }
   }
 
-  /**
-   * Handle file open request - delegates to NavigationService
-   */
   private async handleFileOpen(filePath: string, line: number): Promise<void> {
     try {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -129,9 +115,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     }
   }
 
-  /**
-   * Debounced refresh to avoid excessive updates
-   */
   private debouncedRefresh(): void {
     if (this.updateDebounceTimer) {
       clearTimeout(this.updateDebounceTimer);
@@ -143,9 +126,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     }, this.DEBOUNCE_MS);
   }
 
-  /**
-   * Public refresh method - forces immediate update
-   */
   public refresh(): void {
     if (this.updateDebounceTimer) {
       clearTimeout(this.updateDebounceTimer);
@@ -154,10 +134,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     this.sendDataToWebview();
   }
 
-  /**
-   * Send findings data to webview
-   * Optimized to reuse FindingsStore's internal grouping
-   */
   private sendDataToWebview(): void {
     if (!this.view || !this.view.visible) {
       this.logger.debug('Skipping data send - view not visible');
@@ -165,7 +141,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     }
 
     try {
-      // Use optimized grouped findings from store
       const groupedFindings: GroupedFindings = this.findingsStore.getGroupedWorkspaceFindings();
       const findingCount = Object.keys(groupedFindings).length;
 
@@ -184,9 +159,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     }
   }
 
-  /**
-   * Send error message to webview
-   */
   private sendErrorToWebview(message: string): void {
     if (!this.view) {
       return;
@@ -200,14 +172,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     this.view.webview.postMessage(errorMessage);
   }
 
-  /**
-   * Generate HTML for webview with proper CSP and resource loading
-   */
   private getHtmlForWebview(webview: vscode.Webview): string {
-    // Generate nonce for CSP
     const nonce = this.getNonce();
 
-    // Get URIs for resources
     const styleResetUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'media', 'reset.css')
     );
@@ -215,7 +182,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
       vscode.Uri.joinPath(this.extensionUri, 'media', 'vscode.css')
     );
 
-    // Get codicon font URI from media folder (bundled with extension)
     const codiconUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'media', 'codicon.css')
     );
@@ -239,7 +205,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
   <div class="sidebar-container">
     <button id="scanHistoryBtn" class="scan-history-btn" title="Scan git commit history for secrets">
       <span class="codicon codicon-history"></span>
-      <span class="btn-text">Scan Commit History</span>
+      <span class="btn-text">Scan git history</span>
     </button>
     <div id="secretsList" class="secrets-list">
       <p class="loading">Loading secrets...</p>
@@ -253,9 +219,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
 </html>`;
   }
 
-  /**
-   * Generate a cryptographically secure nonce for CSP
-   */
   private getNonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let nonce = '';
@@ -265,25 +228,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     return nonce;
   }
 
-  /**
-   * Dispose of all resources and clean up
-   */
   public dispose(): void {
     this.logger.info('Disposing SidebarProvider');
 
-    // Clear debounce timer
     if (this.updateDebounceTimer) {
       clearTimeout(this.updateDebounceTimer);
       this.updateDebounceTimer = undefined;
     }
 
-    // Unsubscribe from store
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = undefined;
     }
 
-    // Dispose all disposables
     while (this.disposables.length) {
       const disposable = this.disposables.pop();
       disposable?.dispose();

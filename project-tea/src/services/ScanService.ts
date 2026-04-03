@@ -50,7 +50,6 @@ export class ScanService {
   }
 
   async scanWorkspace(workspacePath: string): Promise<WorkspaceFinding[]> {
-    this.logger.info(`Scanning workspace: ${workspacePath}`);
     const startTime = Date.now();
 
     try {

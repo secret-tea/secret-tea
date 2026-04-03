@@ -6,16 +6,12 @@ export type FindingsEvent =
   | { type: 'history'; finding: HistoryFinding }
   | { type: 'history-cleared' };
 
-/**
- * Listener function type for FindingsStore events
- */
 export interface FindingsListener {
   (event: FindingsEvent): void;
 }
 
 /**
- * Centralized store for managing scan findings
- * Implements observer pattern for reactive UI updates
+ * FindingsStore manage secret findings
  */
 export class FindingsStore {
   private workspaceFindings = new Map<string, Set<WorkspaceFinding>>();
@@ -97,11 +93,6 @@ export class FindingsStore {
     this.notifyListeners({ type: 'history-cleared' });
   }
 
-  /**
-   * Subscribe to findings changes
-   * @param listener Callback function to be called on changes
-   * @returns Unsubscribe function
-   */
   subscribe(listener: FindingsListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -132,9 +123,7 @@ export class FindingsStore {
   }
 
   /**
-   * Get workspace findings grouped by file
-   * Optimized for sidebar display - reuses internal Map structure
-   * @returns Object mapping file paths to arrays of findings
+   * Get workspace findings grouped by filePath.
    */
   getGroupedWorkspaceFindings(): { [filePath: string]: WorkspaceFinding[] } {
     const grouped: { [filePath: string]: WorkspaceFinding[] } = {};

@@ -36,12 +36,21 @@
         {
           "type": "webview",
           "id": "project-tea-sidebar",
-          "name": "Secret Tea",
-          "icon": "media/secret_tea.svg"
+          "name": "Secrets"
+        },
+        {
+          "type": "webview",
+          "id": "project-tea-malware-sidebar",
+          "name": "Malware"
         }
       ]
     },
     "commands": [
+      {
+        "command": "project-tea.scanMalware",
+        "category": "Malware Tea",
+        "title": "Malware Scan workspace"
+      },
       {
         "command": "project-tea.scanCurrentWorkspace",
         "category": "Secret Tea",
