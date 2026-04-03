@@ -19,9 +19,9 @@ export class Logger implements ILogger {
   }
 
   info(message: string, data?: any): void {
-    if (this.logLevel <= LogLevel.Info) {
-      this.log('INFO', message, data);
-    }
+  	if (this.logLevel <= LogLevel.Info) {
+  		this.log('INFO', message, data);
+  	}
   }
 
   warn(message: string, data?: any): void {
@@ -48,21 +48,22 @@ export class Logger implements ILogger {
   }
 
   private log(level: string, message: string, data?: any): void {
-    const timestamp = new Date().toISOString();
-    this.outputChannel.appendLine(`[${timestamp}] [${level}] ${message}`);
+  	const timestamp = new Date().toISOString();
+  	const formattedMessage = `[${timestamp}] [${level}] ${message}`;
+  	this.outputChannel.appendLine(formattedMessage);
 
-    if (data !== undefined) {
-      if (data instanceof Error) {
-        this.outputChannel.appendLine(`  Error: ${data.message}`);
-        if (data.stack) {
-          this.outputChannel.appendLine(`  Stack: ${data.stack}`);
-        }
-      } else if (typeof data === 'object') {
-        this.outputChannel.appendLine(`  Data: ${JSON.stringify(data, null, 2)}`);
-      } else {
-        this.outputChannel.appendLine(`  Data: ${data}`);
-      }
-    }
+  	if (data !== undefined) {
+  		if (data instanceof Error) {
+  			this.outputChannel.appendLine(`  Error: ${data.message}`);
+  			if (data.stack) {
+  				this.outputChannel.appendLine(`  Stack: ${data.stack}`);
+  			}
+  		} else if (typeof data === 'object') {
+  			this.outputChannel.appendLine(`  Data: ${JSON.stringify(data, null, 2)}`);
+  		} else {
+  			this.outputChannel.appendLine(`  Data: ${data}`);
+  		}
+  	}
   }
 
   setLogLevel(level: LogLevel): void {

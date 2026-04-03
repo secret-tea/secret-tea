@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
-import { ServiceContainer } from '../services/ServiceContainer';
+import { ServiceContainer } from '../core/ServiceContainer';
 import { ScanService } from '../services/ScanService';
 import { FindingsStore } from '../stores/FindingsStore';
+import { MalwareScannerService } from '../services/MalwareScannerService';
+import { MalwareStore } from '../stores/MalwareStore';
 import { ILogger, ISidebarUI } from '../services/interfaces';
 import { ErrorHandler } from '../services/ErrorHandler';
 import { SummaryPanel } from '../ui/SummaryPanel';
@@ -18,6 +20,9 @@ export class CommandManager {
     const findingsStore = this.service.get<FindingsStore>('findingsStore');
     const sidebarProvider = this.service.get<ISidebarUI>('sidebarProvider');
     const errorHandler = this.service.get<ErrorHandler>('errorHandler');
+    const malwareScannerService = this.service.get<MalwareScannerService>('malwareScannerService');
+    const malwareStore = this.service.get<MalwareStore>('malwareStore');
+    const malwareSidebarProvider = this.service.get<ISidebarUI>('malwareSidebarProvider');
 
     // Get workspace folder
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -46,7 +51,6 @@ export class CommandManager {
         return;
       }
       try {
-        vscode.window.showInformationMessage('Scanning git repo for secrets and preparing report');
         const findings = await scanService.scanHistory(workspaceFolder);
 
         // Show summary panel
@@ -60,15 +64,32 @@ export class CommandManager {
       }
     });
 
-    // 3. Show Output
     this.registerCommand('project-tea.showOutput', () => {
       logger.show();
     });
 
-    // 4. Refresh Sidebar
     this.registerCommand('project-tea.sidebar.refresh', () => {
       logger.info('Sidebar refresh command triggered');
       sidebarProvider.refresh();
+    });
+
+    // 5. Scan Malware in workspace
+    this.registerCommand('project-tea.scanMalware', async () => {
+      if (!workspaceFolder) {
+        vscode.window.showWarningMessage('Secret Tea: No workspace folder found');
+        return;
+      }
+      try {
+        const vulnerabilities = await malwareScannerService.scanPackageLock(workspaceFolder);
+
+        malwareStore.addWorkspaceVulnerabilities('package-lock.json', vulnerabilities);
+
+        vscode.window.showInformationMessage(
+          `Malware scan complete. Found ${vulnerabilities.length} vulnerable package${vulnerabilities.length === 1 ? '' : 's'}`
+        );
+      } catch (error) {
+        errorHandler.handle(error as Error, 'malware scan command');
+      }
     });
   }
 

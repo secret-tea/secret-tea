@@ -32,11 +32,6 @@ export class SummaryPanel {
 		);
 	}
 
-	/**
-	 * Update the summary panel with findings from FindingsStore
-	 * @param subscriptions Extension context subscriptions
-	 * @param findingsStore The FindingsStore containing history findings
-	 */
 	public static update(
 		subscriptions: vscode.Disposable[],
 		findingsStore: FindingsStore

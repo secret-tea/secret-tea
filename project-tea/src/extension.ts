@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ServiceContainer } from './services/ServiceContainer';
+import { ServiceContainer } from './core/ServiceContainer';
 import { ScanService } from './services/ScanService';
 import { ILogger, ISidebarUI } from './services/interfaces';
 import { ErrorHandler } from './services/ErrorHandler';
@@ -10,14 +10,18 @@ let service: ServiceContainer;
 /**
  * Extension entry point.
  * This function is called when the extension is activated.
+ * Must be async to properly initialize ServiceContainer
  */
 export async function activate(context: vscode.ExtensionContext) {
 	try {
+		// Initialize service container with async initialization
 		service = new ServiceContainer(context);
+		await service.initialize();
 
 		const logger = service.get<ILogger>('logger');
 		const scanService = service.get<ScanService>('scanService');
 		const sidebarProvider = service.get<ISidebarUI>('sidebarProvider');
+		const malwareSidebarProvider = service.get<ISidebarUI>('malwareSidebarProvider');
 		const errorHandler = service.get<ErrorHandler>('errorHandler');
 
 		// Register Sidebar Provider
@@ -25,6 +29,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			vscode.window.registerWebviewViewProvider(
 				'project-tea-sidebar',
 				sidebarProvider
+			),
+			vscode.window.registerWebviewViewProvider(
+				'project-tea-malware-sidebar',
+				malwareSidebarProvider
 			)
 		);
 
@@ -93,9 +101,6 @@ async function handleDocumentSave(
 	}
 }
 
-/**
- * Performs an initial scan of the workspace on startup.
- */
 function performInitialScan(
 	workspacePath: string,
 	scanService: ScanService,
@@ -104,12 +109,13 @@ function performInitialScan(
 ): void {
 	(async () => {
 		try {
-			logger.info('Starting background workspace scan');
+			logger.info('Starting secret initial workspace scan');
 			const startTime = Date.now();
 
 			const findings = await scanService.scanWorkspace(workspacePath);
 
 			const duration = Date.now() - startTime;
+
 			logger.info(
 				`Background scan completed in ${duration}ms. Found ${findings.length} secrets`
 			);

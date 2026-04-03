@@ -391,3 +391,164 @@ button.secondary:hover {
 	outline: 2px solid var(--vscode-focusBorder);
 	outline-offset: 2px;
 }
+
+/* Malware Sidebar Specific Styles */
+.malware-container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 0;
+}
+
+.malware-toolbar {
+	margin: 8px 8px;
+	width: 90%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 400;
+	transition: background-color 0.1s ease;
+	outline: none;
+}
+
+/* Full-width malware scan button */
+.malware-toolbar button,
+.malware-toolbar #scanBtn {
+	width: calc(100% - 16px);
+	padding: 8px 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 400;
+	transition: background-color 0.1s ease;
+	outline: none;
+}
+
+.malware-toolbar button:hover,
+.malware-toolbar #scanBtn:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+
+.malware-toolbar button:active,
+.malware-toolbar #scanBtn:active {
+	background: var(--vscode-button-hoverBackground);
+	transform: translateY(1px);
+}
+
+.malware-toolbar button:focus-visible,
+.malware-toolbar #scanBtn:focus-visible {
+	outline: 1px solid var(--vscode-focusBorder);
+	outline-offset: 2px;
+}
+
+.malware-toolbar button:disabled,
+.malware-toolbar #scanBtn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.malware-list {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	margin: 0;
+	padding: 0;
+}
+
+/* Malware-specific styling for vulnerability items */
+.vuln-count {
+	background: var(--vscode-badge-background);
+	color: var(--vscode-badge-foreground);
+	padding: 1px 5px;
+	border-radius: 11px;
+	font-size: 11px;
+	font-weight: 600;
+	min-width: 18px;
+	text-align: center;
+	line-height: 1.4;
+}
+
+.vulnerabilities-container {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.15s ease-out;
+	background: transparent;
+}
+
+.vulnerabilities-container.expanded {
+	max-height: 2000px;
+	transition: max-height 0.2s ease-in;
+}
+
+.vulnerability-item {
+	padding: 0 8px 0 28px;
+	height: auto;
+	cursor: default;
+	transition: background-color 0.1s ease;
+	display: block;
+	position: relative;
+	color: var(--vscode-foreground);
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.vulnerability-item::before {
+	content: '';
+	position: absolute;
+	left: 18px;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background-color: var(--vscode-tree-indentGuidesStroke);
+	opacity: 0.4;
+}
+
+.vuln-header {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	font-weight: 500;
+	color: var(--vscode-foreground);
+}
+
+.vuln-header .codicon {
+	font-size: 14px;
+	flex-shrink: 0;
+	opacity: 0.8;
+	color: var(--vscode-errorForeground);
+}
+
+.vuln-name {
+	color: var(--vscode-errorForeground);
+	font-weight: 500;
+	font-size: 11px;
+	font-family: monospace;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.vuln-reason {
+	font-size: 11px;
+	color: var(--vscode-descriptionForeground);
+	opacity: 0.85;
+	margin-top: 4px;
+	padding-left: 22px;
+}
