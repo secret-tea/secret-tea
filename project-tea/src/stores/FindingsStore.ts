@@ -17,6 +17,12 @@ export class FindingsStore {
   private workspaceFindings = new Map<string, Set<WorkspaceFinding>>();
   private historyFindings = new Set<HistoryFinding>();
   private listeners = new Set<FindingsListener>();
+  public isScanning = false;
+
+  setScanning(isScanning: boolean) {
+    this.isScanning = isScanning;
+    this.notifyListeners({ type: 'workspace-cleared' }); // Trigger a refresh
+  }
 
   addWorkspaceFinding(filePath: string, finding: WorkspaceFinding): void {
     if (!this.workspaceFindings.has(filePath)) {

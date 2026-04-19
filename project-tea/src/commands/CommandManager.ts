@@ -82,6 +82,7 @@ export class CommandManager {
       try {
         const vulnerabilities = await malwareScannerService.scanPackageLock(workspaceFolder);
 
+        malwareStore.clearWorkspaceVulnerabilities();
         malwareStore.addWorkspaceVulnerabilities('package-lock.json', vulnerabilities);
 
         vscode.window.showInformationMessage(

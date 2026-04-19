@@ -4,6 +4,7 @@ import { ILogger, GroupedFindings, WebviewProtocol, ISidebarUI } from '../servic
 import { NavigationService } from '../services/NavigationService';
 import { ErrorHandler } from '../services/ErrorHandler';
 import { WebviewCommunicationError } from '../errors/SidebarErrors';
+import { ExportService } from '../services/ExportService';
 
 export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
   private view?: vscode.WebviewView;
@@ -17,7 +18,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
     private readonly findingsStore: FindingsStore,
     private readonly navigationService: NavigationService,
     private readonly errorHandler: ErrorHandler,
-    private readonly logger: ILogger
+    private readonly logger: ILogger,
+    private readonly exportService: ExportService
   ) {
     this.unsubscribe = this.findingsStore.subscribe(() => {
       this.debouncedRefresh();
@@ -92,6 +94,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
           this.sendDataToWebview();
           break;
 
+        case 'exportSecrets':
+          this.logger.info(`Export secrets requested in format: ${message.format}`);
+          await this.handleExport(message.format);
+          break;
+
         default:
           this.logger.warn('Unknown message type from webview', message);
       }
@@ -102,6 +109,48 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
       );
       this.errorHandler.handleSilent(commError, 'sidebar message handling');
       this.sendErrorToWebview('Failed to process action');
+    }
+  }
+
+  private async handleExport(format: string): Promise<void> {
+    try {
+      const workspaceFindings = this.findingsStore.getAllWorkspaceFindings();
+      const historyFindings = this.findingsStore.getAllHistoryFindings();
+
+      if (workspaceFindings.length === 0 && historyFindings.length === 0) {
+        vscode.window.showInformationMessage('No findings to export.');
+        return;
+      }
+
+      let filters: { [name: string]: string[] } = {};
+      if (format === 'json') filters = { 'JSON': ['json'] };
+      if (format === 'csv-workspace' || format === 'csv-history') filters = { 'CSV': ['csv'] };
+      if (format === 'pdf') filters = { 'PDF': ['pdf'] };
+
+      const uri = await this.exportService.promptSaveLocation(`secret-findings.${format.startsWith('csv') ? 'csv' : format}`, filters);
+      if (!uri) return;
+
+      if (format === 'json') {
+        await this.exportService.exportSecretsToJson(workspaceFindings, historyFindings, uri);
+      } else if (format === 'csv-workspace') {
+        if (workspaceFindings.length === 0) {
+          vscode.window.showInformationMessage('No workspace findings to export.');
+          return;
+        }
+        await this.exportService.exportWorkspaceSecretsToCsv(workspaceFindings, uri);
+      } else if (format === 'csv-history') {
+        if (historyFindings.length === 0) {
+          vscode.window.showInformationMessage('No history findings to export.');
+          return;
+        }
+        await this.exportService.exportHistorySecretsToCsv(historyFindings, uri);
+      } else if (format === 'pdf') {
+        await this.exportService.exportSecretsToPdf(workspaceFindings, historyFindings, uri);
+      }
+
+      vscode.window.showInformationMessage(`Exported successfully to ${uri.fsPath}`);
+    } catch (error) {
+      this.errorHandler.handle(error as Error, 'export secrets');
     }
   }
 
@@ -149,7 +198,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
       const message: WebviewProtocol.ToWebview = {
         type: 'updateSecrets',
         data: groupedFindings,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        isScanning: this.findingsStore.isScanning
       };
 
       this.view.webview.postMessage(message);
@@ -203,18 +253,28 @@ export class SidebarProvider implements vscode.WebviewViewProvider, ISidebarUI {
 </head>
 <body>
   <div class="sidebar-container">
-    <button id="scanHistoryBtn" class="scan-history-btn" title="Scan git commit history for secrets">
-      <span class="codicon codicon-history"></span>
-      <span class="btn-text">Scan git history</span>
-    </button>
+    <div class="toolbar split-toolbar">
+      <button id="scanHistoryBtn" class="scan-history-btn" title="Scan git commit history for secrets">
+        <span class="codicon codicon-history"></span>
+        <span class="btn-text">Scan git history</span>
+      </button>
+      <div class="dropdown-container">
+        <button id="exportSecretsToggleBtn" class="dropdown-toggle-btn" title="Export Findings">
+          <span class="codicon codicon-chevron-down"></span>
+        </button>
+        <div id="exportSecretsDropdown" class="dropdown-menu hidden">
+          <div class="dropdown-item" data-format="json">Export to JSON</div>
+          <div class="dropdown-item" data-format="csv-workspace">Export workspace to CSV</div>
+          <div class="dropdown-item" data-format="csv-history">Export history to CSV</div>
+          <div class="dropdown-item" data-format="pdf">Export to PDF</div>
+        </div>
+      </div>
+    </div>
     <div id="secretsList" class="secrets-list">
       <p class="loading">Loading secrets...</p>
     </div>
   </div>
-  <script nonce="${nonce}">
-    const vscode = acquireVsCodeApi();
-  </script>
-  <script nonce="${nonce}" src="${scriptUri}"></script>
+  <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
   }

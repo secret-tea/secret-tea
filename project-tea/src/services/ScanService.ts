@@ -6,6 +6,8 @@ import { IGitleaksExecutor, ILogger, IOutputParser, IDiagnosticsUI, WorkspaceFin
  * Coordinates between executor, parser, store, and UI
  */
 export class ScanService {
+  public isInitialScanning: boolean = false;
+
   constructor(
     private executor: IGitleaksExecutor,
     private parser: IOutputParser,
@@ -55,7 +57,12 @@ export class ScanService {
     try {
       const output = await this.executor.executeWorkspace(workspacePath);
 
-      const findings = this.parser.parseWorkspaceScan(output);
+      const findings = this.parser.parseWorkspaceScan(output).map(f => ({
+        ...f,
+        file: f.file.startsWith(workspacePath)
+          ? f.file.slice(workspacePath.length).replace(/^\//, '')
+          : f.file
+      }));
 
       const duration = Date.now() - startTime;
       this.logger.info(`Workspace scan completed in ${duration}ms. Found ${findings.length} secrets`);
@@ -89,7 +96,12 @@ export class ScanService {
     try {
       const output = await this.executor.executeHistory(workspacePath);
 
-      const findings = this.parser.parseHistoryScan(output);
+      const findings = this.parser.parseHistoryScan(output).map(f => ({
+        ...f,
+        file: f.file.startsWith(workspacePath)
+          ? f.file.slice(workspacePath.length).replace(/^\//, '')
+          : f.file
+      }));
 
       const duration = Date.now() - startTime;
       this.logger.info(`History scan completed in ${duration}ms. Found ${findings.length} secrets`);
