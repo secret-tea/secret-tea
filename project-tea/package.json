@@ -36,12 +36,14 @@
         {
           "type": "webview",
           "id": "project-tea-sidebar",
-          "name": "Secrets"
+          "name": "Secrets",
+          "icon": "media/secret_tea.svg"
         },
         {
           "type": "webview",
           "id": "project-tea-malware-sidebar",
-          "name": "Malware"
+          "name": "Malware",
+          "icon": "media/secret_tea.svg"
         }
       ]
     },
@@ -100,18 +102,24 @@
     "test:vscode": "vscode-test"
   },
   "devDependencies": {
-    "@jest/globals": "^30.2.0",
-    "@types/jest": "^30.0.0",
+    "@jest/globals": "30.2.0",
+    "@types/jest": "30.0.0",
     "@types/node": "22.x",
+    "@types/pdfmake": "0.3.2",
     "@types/vscode": "^1.104.0",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
-    "@typescript-eslint/parser": "^8.45.0",
-    "@vscode/codicons": "^0.0.44",
-    "@vscode/test-cli": "^0.0.11",
-    "@vscode/test-electron": "^2.5.2",
-    "eslint": "^9.36.0",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.9.3"
+    "@typescript-eslint/eslint-plugin": "8.45.0",
+    "@typescript-eslint/parser": "8.45.0",
+    "@vscode/codicons": "0.0.44",
+    "@vscode/test-cli": "0.0.11",
+    "@vscode/test-electron": "2.5.2",
+    "eslint": "9.36.0",
+    "jest": "30.2.0",
+    "ts-jest": "29.4.6",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@types/pdfkit": "0.17.5",
+    "pdfkit": "0.18.0",
+    "pdfmake": "0.3.7"
   }
 }

@@ -11,6 +11,7 @@ import { SidebarProvider } from '../ui/SidebarProvider';
 import { MalwareSidebarProvider } from '../ui/MalwareSidebarProvider';
 import { ErrorHandler } from '../services/ErrorHandler';
 import { ILogger, LogLevel } from '../services/interfaces';
+import { ExportService } from '../services/ExportService';
 import { ServiceRegistry } from './ServiceRegistry';
 import { MalwareScannerService } from '../services/MalwareScannerService';
 import { MalwareStore } from '../stores/MalwareStore';
@@ -38,7 +39,7 @@ export class ServiceContainer {
     }
 
     try {
-      // 1. Logger 
+      // 1. Logger
       this.logger = new Logger(this.context, LogLevel.Info);
       this.registry.register('logger', this.logger);
       this.logSeparator();
@@ -78,18 +79,24 @@ export class ServiceContainer {
       const errorHandler = new ErrorHandler(this.logger, statusBarUI);
       this.registry.register('errorHandler', errorHandler);
 
-       // 7. Create sidebar providers
+      // 7. Create export service
+      this.logger.debug('Initializing ExportService...');
+      const exportService = new ExportService();
+      this.registry.register('exportService', exportService);
+
+       // 8. Create sidebar providers
        this.logger.debug('Initializing SidebarProvider...');
        const sidebarProvider = new SidebarProvider(
          this.context.extensionUri,
          findingsStore,
          navigationService,
          errorHandler,
-         this.logger
+         this.logger,
+         exportService
        );
        this.registry.register('sidebarProvider', sidebarProvider);
 
-       // 8. Create malware store (before MalwareSidebarProvider)
+       // 9. Create malware store (before MalwareSidebarProvider)
        this.logger.debug('Initializing MalwareStore...');
        const malwareStore = new MalwareStore();
        this.registry.register('malwareStore', malwareStore);
@@ -98,16 +105,17 @@ export class ServiceContainer {
        const malwareSidebarProvider = new MalwareSidebarProvider(
          this.context.extensionUri,
          this.logger,
-         malwareStore
+         malwareStore,
+         exportService
        );
        this.registry.register('malwareSidebarProvider', malwareSidebarProvider);
 
-       // 9. Create malware scanner service
+       // 10. Create malware scanner service
        this.logger.debug('Initializing MalwareScannerService...');
        const malwareScannerService = new MalwareScannerService(this.logger);
        this.registry.register('malwareScannerService', malwareScannerService);
 
-       // 10. Create scan service (depends on multiple services)
+       // 11. Create scan service (depends on multiple services)
        this.logger.debug('Initializing ScanService...');
        const scanService = new ScanService(
          executor,
@@ -149,9 +157,9 @@ export class ServiceContainer {
   }
 
   dispose(): void {
-    this.logger?.info(this.logLine());
+    this.logSeparator()
     this.logger?.info('Disposing services...');
-    this.logger?.info(this.logLine());
+    this.logSeparator()
 
     try {
       this.registry.disposeAll();
@@ -163,10 +171,6 @@ export class ServiceContainer {
   }
 
   private logSeparator(): void {
-    this.logger.info(this.logLine());
-  }
-
-  private logLine(): string {
-    return '='.repeat(50);
+    this.logger.info('='.repeat(50));
   }
 }

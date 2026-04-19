@@ -91,9 +91,10 @@ button.secondary:hover {
 /* Sidebar Specific Styles */
 .sidebar-container {
 	padding: 0;
-	height: 100%;
-	overflow-y: auto;
-	overflow-x: hidden;
+	height: 100vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
 }
 
 /* Full-width scan history button - matches Source Control commit button */
@@ -139,6 +140,9 @@ button.secondary:hover {
 }
 
 .secrets-list {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
 	margin: 0;
 	padding: 0;
 }
@@ -400,66 +404,7 @@ button.secondary:hover {
 	padding: 0;
 }
 
-.malware-toolbar {
-	margin: 8px 8px;
-	width: 90%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	background: var(--vscode-button-background);
-	color: var(--vscode-button-foreground);
-	border: none;
-	border-radius: 2px;
-	cursor: pointer;
-	font-size: 13px;
-	font-weight: 400;
-	transition: background-color 0.1s ease;
-	outline: none;
-}
 
-/* Full-width malware scan button */
-.malware-toolbar button,
-.malware-toolbar #scanBtn {
-	width: calc(100% - 16px);
-	padding: 8px 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 6px;
-	background: var(--vscode-button-background);
-	color: var(--vscode-button-foreground);
-	border: none;
-	border-radius: 2px;
-	cursor: pointer;
-	font-size: 13px;
-	font-weight: 400;
-	transition: background-color 0.1s ease;
-	outline: none;
-}
-
-.malware-toolbar button:hover,
-.malware-toolbar #scanBtn:hover {
-	background: var(--vscode-button-hoverBackground);
-}
-
-.malware-toolbar button:active,
-.malware-toolbar #scanBtn:active {
-	background: var(--vscode-button-hoverBackground);
-	transform: translateY(1px);
-}
-
-.malware-toolbar button:focus-visible,
-.malware-toolbar #scanBtn:focus-visible {
-	outline: 1px solid var(--vscode-focusBorder);
-	outline-offset: 2px;
-}
-
-.malware-toolbar button:disabled,
-.malware-toolbar #scanBtn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-}
 
 .malware-list {
 	flex: 1;
@@ -551,4 +496,74 @@ button.secondary:hover {
 	opacity: 0.85;
 	margin-top: 4px;
 	padding-left: 22px;
+}
+
+/* Split Button Dropdown Styles */
+.split-toolbar {
+	display: flex;
+	align-items: stretch;
+	margin: 8px;
+	width: calc(100% - 16px);
+}
+.split-toolbar > button {
+	margin: 0;
+}
+.split-toolbar .scan-history-btn, .split-toolbar #scanBtn {
+	flex: 1;
+	border-radius: 3px 0 0 3px;
+	width: auto;
+	margin: 0;
+}
+.dropdown-container {
+	position: relative;
+	display: flex;
+}
+.dropdown-toggle-btn {
+	padding: 8px 6px;
+	border-radius: 0 3px 3px 0;
+	background: var(--vscode-button-background);
+	color: var(--vscode-button-foreground);
+	border-left: 1px solid rgba(0,0,0,0.2) !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+}
+.dropdown-toggle-btn.secondary {
+	background: var(--vscode-button-secondaryBackground);
+	color: var(--vscode-button-secondaryForeground);
+	border-left: 1px solid rgba(0,0,0,0.1) !important;
+}
+.dropdown-toggle-btn:hover {
+	background: var(--vscode-button-hoverBackground);
+}
+.dropdown-toggle-btn:focus, .dropdown-toggle-btn:focus-visible {
+	outline: none !important;
+}
+.dropdown-menu {
+	position: absolute;
+	top: 100%;
+	right: 0;
+	margin-top: 4px;
+	background: var(--vscode-menu-background, var(--vscode-dropdown-background));
+	border: 1px solid var(--vscode-menu-border, var(--vscode-focusBorder));
+	border-radius: 4px;
+	z-index: 1000;
+	min-width: 140px;
+	box-shadow: 0 2px 8px var(--vscode-widget-shadow);
+	padding: 4px 0;
+}
+.dropdown-menu.hidden {
+	display: none;
+}
+.dropdown-item {
+	padding: 6px 12px;
+	cursor: pointer;
+	color: var(--vscode-menu-foreground, var(--vscode-dropdown-foreground));
+	font-size: 13px;
+	white-space: nowrap;
+}
+.dropdown-item:hover {
+	background: var(--vscode-menu-selectionBackground, var(--vscode-list-activeSelectionBackground));
+	color: var(--vscode-menu-selectionForeground, var(--vscode-list-activeSelectionForeground));
 }

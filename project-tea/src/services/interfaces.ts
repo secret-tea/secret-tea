@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 
 export interface WorkspaceFinding {
-  secret: string;
-  ruleID: string;
   file: string;
   line: number;
+  ruleID: string;
+  secret: string;
 }
 
 export interface HistoryFinding extends WorkspaceFinding {
@@ -85,13 +85,14 @@ export namespace WebviewProtocol {
     | { type: 'refresh' }
     | { type: 'scanHistory' }
     | { type: 'openFile'; file: string; line: number }
+    | { type: 'exportSecrets'; format: string }
     | { type: 'ready' };
 
   /**
    * Messages sent from extension to webview
    */
   export type ToWebview =
-    | { type: 'updateSecrets'; data: GroupedFindings; timestamp: number }
+    | { type: 'updateSecrets'; data: GroupedFindings; timestamp: number; isScanning?: boolean }
     | { type: 'error'; message: string };
 }
 

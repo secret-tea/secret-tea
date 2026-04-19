@@ -10,6 +10,7 @@ import { GitleaksOutputParser } from '../parsers/GitleaksOutputParser';
 
 import { MalwareScannerService } from '../services/MalwareScannerService';
 import { MalwareStore } from '../stores/MalwareStore';
+import { ExportService } from '../services/ExportService';
 
 export type ServiceIdentifier =
   | { name: 'logger'; type: ILogger }
@@ -24,7 +25,8 @@ export type ServiceIdentifier =
   | { name: 'malwareSidebarProvider'; type: ISidebarUI }
   | { name: 'scanService'; type: ScanService }
   | { name: 'malwareStore'; type: MalwareStore }
-  | { name: 'malwareScannerService'; type: MalwareScannerService };
+  | { name: 'malwareScannerService'; type: MalwareScannerService }
+  | { name: 'exportService'; type: ExportService };
 
 export type ServiceType<T extends ServiceIdentifier['name']> = Extract<
   ServiceIdentifier,

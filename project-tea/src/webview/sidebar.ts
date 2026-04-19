@@ -1,3 +1,8 @@
+declare function acquireVsCodeApi(): any;
+const vscode = acquireVsCodeApi();
+
+export {};
+
 interface GroupedFindings {
   [filePath: string]: Finding[];
 }
@@ -34,11 +39,7 @@ class SidebarController {
     this.initialize();
   }
 
-  /**
-   * Initialize the sidebar
-   */
   private initialize(): void {
-    // Get DOM elements
     this.container = document.getElementById('secretsList');
 
     if (!this.container) {
@@ -46,45 +47,48 @@ class SidebarController {
       return;
     }
 
-    // Set up event delegation
     this.setupEventListeners();
 
-    // Request initial data
     this.requestData();
 
-    // Listen for messages from extension
     window.addEventListener('message', (event) => this.handleMessage(event));
 
     console.log('Sidebar initialized');
   }
 
-  /**
-   * Set up event listeners with delegation
-   */
   private setupEventListeners(): void {
-    // Single click handler for all interactions (event delegation)
     document.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
 
-      // Scan history button
       if (target.id === 'scanHistoryBtn' || target.closest('#scanHistoryBtn')) {
         this.handleScanHistory();
         e.stopPropagation();
         return;
       }
 
-      // File header toggle
-      const fileHeader = target.classList.contains('file-header')
-        ? target
-        : target.closest('.file-header');
-
-      if (fileHeader && !target.closest('.secret-item')) {
-        this.toggleFileGroup(fileHeader as HTMLElement);
+      // Export toggle
+      if (target.id === 'exportSecretsToggleBtn' || target.closest('#exportSecretsToggleBtn')) {
+        const dropdown = document.getElementById('exportSecretsDropdown');
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+        }
         e.stopPropagation();
         return;
       }
 
-      // Secret item click
+      // Export option click
+      const exportItem = target.classList.contains('dropdown-item') ? target : target.closest('.dropdown-item');
+      if (exportItem && exportItem.closest('#exportSecretsDropdown')) {
+        const format = exportItem.getAttribute('data-format');
+        if (format) {
+          vscode.postMessage({ type: 'exportSecrets', format });
+        }
+        document.getElementById('exportSecretsDropdown')?.classList.add('hidden');
+        e.stopPropagation();
+        return;
+      }
+
+      document.getElementById('exportSecretsDropdown')?.classList.add('hidden');
       const secretItem = target.classList.contains('secret-item')
         ? target
         : target.closest('.secret-item');
@@ -93,6 +97,15 @@ class SidebarController {
         this.handleSecretClick(secretItem as HTMLElement);
         e.stopPropagation();
         return;
+      }
+
+      const fileHeader = target.classList.contains('file-header')
+        ? target
+        : target.closest('.file-header');
+
+      if (fileHeader) {
+        this.toggleFileGroup(fileHeader as HTMLElement);
+        e.stopPropagation();
       }
     });
 
@@ -108,23 +121,14 @@ class SidebarController {
     });
   }
 
-  /**
-   * Request data from extension
-   */
   private requestData(): void {
     vscode.postMessage({ type: 'ready' });
   }
 
-  /**
-   * Handle scan history button click
-   */
   private handleScanHistory(): void {
     vscode.postMessage({ type: 'scanHistory' });
   }
 
-  /**
-   * Handle secret item click - open file at line
-   */
   private handleSecretClick(element: HTMLElement): void {
     const file = element.getAttribute('data-file');
     const line = element.getAttribute('data-line');
@@ -138,9 +142,6 @@ class SidebarController {
     }
   }
 
-  /**
-   * Toggle file group expansion
-   */
   private toggleFileGroup(header: HTMLElement): void {
     const container = header.nextElementSibling as HTMLElement;
     const arrow = header.querySelector('.file-toggle');
@@ -176,24 +177,12 @@ class SidebarController {
     this.saveState();
   }
 
-  /**
-   * Handle messages from extension
-   */
   private handleMessage(event: MessageEvent): void {
     const message = event.data;
 
     switch (message.type) {
       case 'updateSecrets':
-        // Cancel any pending render
-        if (this.renderRequestId !== null) {
-          cancelAnimationFrame(this.renderRequestId);
-        }
-
-        // Schedule render using requestAnimationFrame for optimal performance
-        this.renderRequestId = requestAnimationFrame(() => {
-          this.renderSecrets(message.data, message.timestamp);
-          this.renderRequestId = null;
-        });
+        this.renderSecrets(message.data, message.timestamp, message.isScanning);
         break;
 
       case 'error':
@@ -205,15 +194,11 @@ class SidebarController {
     }
   }
 
-  /**
-   * Render secrets with optimized DOM updates
-   */
-  private renderSecrets(groupedFindings: GroupedFindings, timestamp: number): void {
+  private renderSecrets(groupedFindings: GroupedFindings, timestamp: number, isScanning?: boolean): void {
     if (!this.container) {
       return;
     }
 
-    // Check if this is a newer update
     if (timestamp < this.state.lastUpdate) {
       console.log('Ignoring stale update');
       return;
@@ -224,11 +209,10 @@ class SidebarController {
     const files = Object.keys(groupedFindings);
 
     if (files.length === 0) {
-      this.showEmptyState();
+      this.showEmptyState(isScanning);
       return;
     }
 
-    // Use DocumentFragment for efficient batch DOM updates
     const fragment = document.createDocumentFragment();
 
     for (const file of files) {
@@ -237,26 +221,20 @@ class SidebarController {
       fragment.appendChild(fileGroup);
     }
 
-    // Single DOM update
     this.container.innerHTML = '';
     this.container.appendChild(fragment);
 
     console.log(`Rendered ${files.length} file(s) with secrets`);
   }
 
-  /**
-   * Create file group element
-   */
   private createFileGroup(filePath: string, findings: Finding[]): HTMLElement {
     const isExpanded = this.state.expandedFiles.has(filePath);
     const fileName = this.getFileName(filePath);
     const secretCount = findings.length;
 
-    // Create file group container
     const fileGroup = document.createElement('div');
     fileGroup.className = 'file-group';
 
-    // Create file header
     const header = document.createElement('div');
     header.className = 'file-header';
     header.setAttribute('data-file', filePath);
@@ -267,15 +245,12 @@ class SidebarController {
     const fileInfo = document.createElement('div');
     fileInfo.className = 'file-info';
 
-    // Toggle chevron (codicon)
     const toggle = document.createElement('span');
     toggle.className = `codicon codicon-chevron-right file-toggle ${isExpanded ? 'expanded' : ''}`;
 
-    // File icon (codicon based on extension)
     const fileIcon = document.createElement('span');
     fileIcon.className = `codicon codicon-${this.getFileIcon(filePath)} file-icon`;
 
-    // File name (no emoji prefix)
     const name = document.createElement('span');
     name.className = 'file-name';
     name.textContent = fileName;
@@ -292,11 +267,9 @@ class SidebarController {
     header.appendChild(fileInfo);
     header.appendChild(count);
 
-    // Create secrets container
     const container = document.createElement('div');
     container.className = `secrets-container ${isExpanded ? 'expanded' : ''}`;
 
-    // Create secret items
     for (const finding of findings) {
       const item = this.createSecretItem(finding);
       container.appendChild(item);
@@ -308,9 +281,6 @@ class SidebarController {
     return fileGroup;
   }
 
-  /**
-   * Create secret item element
-   */
   private createSecretItem(finding: Finding): HTMLElement {
     const item = document.createElement('div');
     item.className = 'secret-item';
@@ -350,25 +320,28 @@ class SidebarController {
     return item;
   }
 
-  /**
-   * Show empty state
-   */
-  private showEmptyState(): void {
+  private showEmptyState(isScanning?: boolean): void {
     if (!this.container) {
       return;
     }
 
-    this.container.innerHTML = `
-      <div class="no-secrets">
-        <div class="empty-icon">✓</div>
-        <p>No secrets detected</p>
-      </div>
-    `;
+    if (isScanning) {
+      this.container.innerHTML = `
+        <div class="no-secrets">
+          <div class="empty-icon codicon codicon-sync codicon-modifier-spin" style="font-size: 24px; color: var(--vscode-charts-blue);"></div>
+          <p>Scanning the workspace for secrets...</p>
+        </div>
+      `;
+    } else {
+      this.container.innerHTML = `
+        <div class="no-secrets">
+          <div class="empty-icon">✓</div>
+          <p>No secrets detected</p>
+        </div>
+      `;
+    }
   }
 
-  /**
-   * Show error message
-   */
   private showError(message: string): void {
     if (!this.container) {
       return;
@@ -381,9 +354,6 @@ class SidebarController {
     `;
   }
 
-  /**
-   * Extract file name from path
-   */
   private getFileName(filePath: string): string {
     if (!filePath) {
       return 'Unknown';
@@ -392,22 +362,15 @@ class SidebarController {
     return parts[parts.length - 1] || filePath;
   }
 
-  /**
-   * Get file extension from path
-   */
   private getFileExtension(filePath: string): string {
     const fileName = this.getFileName(filePath);
     const parts = fileName.split('.');
     return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : '';
   }
 
-  /**
-   * Get appropriate VS Code icon for file type
-   */
   private getFileIcon(filePath: string): string {
     const ext = this.getFileExtension(filePath);
 
-    // Map extensions to VS Code codicons
     const iconMap: { [key: string]: string } = {
       // JavaScript/TypeScript
       'js': 'symbol-method',

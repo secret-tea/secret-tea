@@ -9,12 +9,9 @@ let service: ServiceContainer;
 
 /**
  * Extension entry point.
- * This function is called when the extension is activated.
- * Must be async to properly initialize ServiceContainer
  */
 export async function activate(context: vscode.ExtensionContext) {
 	try {
-		// Initialize service container with async initialization
 		service = new ServiceContainer(context);
 		await service.initialize();
 
@@ -112,7 +109,11 @@ function performInitialScan(
 			logger.info('Starting secret initial workspace scan');
 			const startTime = Date.now();
 
+			const findingsStore = scanService['findingsStore'];
+
+			(scanService as any).findingsStore.setScanning(true);
 			const findings = await scanService.scanWorkspace(workspacePath);
+			(scanService as any).findingsStore.setScanning(false);
 
 			const duration = Date.now() - startTime;
 
