@@ -15,7 +15,7 @@ import { ExportService } from '../services/ExportService';
 import { ServiceRegistry } from './ServiceRegistry';
 import { MalwareScannerService } from '../services/MalwareScannerService';
 import { MalwareStore } from '../stores/MalwareStore';
-
+import { MaskingService } from '../services/MaskingService';
 /**
  * Service container for dependency injection
  * Manages service lifecycle and provides centralized access to services
@@ -65,8 +65,13 @@ export class ServiceContainer {
       const diagnosticsUI = new DiagnosticsUI(this.context);
       this.registry.register('diagnosticsUI', diagnosticsUI);
 
+      // 9. Create masking service (before StatusBarUI)
+      this.logger.debug('Initializing MaskingService...');
+      const maskingService = new MaskingService(this.logger, findingsStore);
+      this.registry.register('maskingService', maskingService);
+
       this.logger.debug('Initializing StatusBarUI...');
-      const statusBarUI = new StatusBarUI(this.context, findingsStore);
+      const statusBarUI = new StatusBarUI(this.context, findingsStore, maskingService);
       this.registry.register('statusBarUI', statusBarUI);
 
       // 5. Create utility services
@@ -122,10 +127,10 @@ export class ServiceContainer {
          parser,
          findingsStore,
          diagnosticsUI,
-         this.logger
+         this.logger,
+         maskingService
        );
        this.registry.register('scanService', scanService);
-
       this.logSeparator();
       this.logger.info('All services initialized successfully');
       this.logSeparator();

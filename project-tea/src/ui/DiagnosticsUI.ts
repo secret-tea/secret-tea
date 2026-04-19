@@ -49,39 +49,9 @@ export class DiagnosticsUI implements IDiagnosticsUI {
   }
 
   highlightFindings(filePath: string, findings: WorkspaceFinding[]): void {
-    // Find the editor for this file
-    const editor = this.findEditor(filePath);
-    if (!editor) {
-      return;
-    }
-
-    // Clear old decoration for this file
-    const oldDecoration = this.decorationsByFile.get(filePath);
-    if (oldDecoration) {
-      oldDecoration.dispose();
-    }
-
-    // Create new decoration
-    const decoration = vscode.window.createTextEditorDecorationType({
-      backgroundColor: 'rgba(255, 0, 0, 0.3)',
-      border: '1px solid red',
-      overviewRulerColor: 'red',
-      overviewRulerLane: vscode.OverviewRulerLane.Right
-    });
-
-    this.decorationsByFile.set(filePath, decoration);
-
-    // Create decoration options for all findings
-    const decorations = findings.map(f => ({
-      range: new vscode.Range(
-        new vscode.Position(f.line, 0),
-        new vscode.Position(f.line, Number.MAX_SAFE_INTEGER)
-      ),
-      hoverMessage: `**Secret Detected**: ${f.ruleID}\n\n\`\`\`\n${f.secret}\n\`\`\``
-    }));
-
-    // Apply decorations
-    editor.setDecorations(decoration, decorations);
+    // NOTE: Highlighting is now handled by MaskingService with visual masking
+    // This method is kept for backwards compatibility but does nothing
+    // Keeping only diagnostics (error list in Problems panel)
   }
 
   private createDiagnostic(finding: WorkspaceFinding): vscode.Diagnostic {

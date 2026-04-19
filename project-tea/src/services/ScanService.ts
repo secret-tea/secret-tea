@@ -1,5 +1,6 @@
 import { FindingsStore } from '../stores/FindingsStore';
 import { IGitleaksExecutor, ILogger, IOutputParser, IDiagnosticsUI, WorkspaceFinding, HistoryFinding } from './interfaces';
+import { MaskingService } from './MaskingService';
 
 /**
  * Service for orchestrating secret scans
@@ -13,7 +14,8 @@ export class ScanService {
     private parser: IOutputParser,
     private findingsStore: FindingsStore,
     private diagnosticsUI: IDiagnosticsUI,
-    private logger: ILogger
+    private logger: ILogger,
+    private maskingService: MaskingService
   ) {
     this.logger.info('ScanService initialized');
   }
@@ -147,7 +149,7 @@ export class ScanService {
 
   clearAllFindings(): void {
     this.logger.info('Clearing all findings');
-    this.findingsStore.clearAll();
+    this.findingsStore.clearAll();              
     this.diagnosticsUI.clearDiagnostics();
   }
 }
