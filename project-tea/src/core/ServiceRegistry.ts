@@ -7,6 +7,7 @@ import { DiagnosticsUI } from '../ui/DiagnosticsUI';
 import { StatusBarUI } from '../ui/StatusBarUI';
 import { GitleaksExecutor } from '../services/GitleaksExecutor';
 import { GitleaksOutputParser } from '../parsers/GitleaksOutputParser';
+import { MaskingService } from '../services/MaskingService';
 
 import { MalwareScannerService } from '../services/MalwareScannerService';
 import { MalwareStore } from '../stores/MalwareStore';
@@ -27,6 +28,8 @@ export type ServiceIdentifier =
   | { name: 'malwareStore'; type: MalwareStore }
   | { name: 'malwareScannerService'; type: MalwareScannerService }
   | { name: 'exportService'; type: ExportService };
+  | { name: 'malwareScannerService'; type: MalwareScannerService }
+  | { name: 'maskingService'; type: MaskingService };
 
 export type ServiceType<T extends ServiceIdentifier['name']> = Extract<
   ServiceIdentifier,

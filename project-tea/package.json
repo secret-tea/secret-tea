@@ -73,6 +73,11 @@
         "category": "Secret Tea",
         "title": "Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "project-tea.toggleMasking",
+        "category": "Secret Tea",
+        "title": "Toggle Visual Masking"
       }
     ],
     "menus": {

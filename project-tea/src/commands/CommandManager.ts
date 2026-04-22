@@ -7,7 +7,8 @@ import { MalwareStore } from '../stores/MalwareStore';
 import { ILogger, ISidebarUI } from '../services/interfaces';
 import { ErrorHandler } from '../services/ErrorHandler';
 import { SummaryPanel } from '../ui/SummaryPanel';
-
+import { MaskingService } from '../services/MaskingService';
+import { StatusBarUI } from '../ui/StatusBarUI';
 export class CommandManager {
   constructor(
       private context: vscode.ExtensionContext,
@@ -92,6 +93,25 @@ export class CommandManager {
         errorHandler.handle(error as Error, 'malware scan command');
       }
     });
+
+    // 6. Toggle Visual Masking
+    this.registerMaskingCommands();
+  }
+
+  private registerMaskingCommands(): void {
+    const maskingService = this.service.get<MaskingService>('maskingService');
+    const statusBarUI = this.service.get<StatusBarUI>('statusBarUI');
+      
+    const toggleMaskingCommand = vscode.commands.registerCommand(
+      'project-tea.toggleMasking',
+      () => {
+        maskingService.toggleMasking();
+        // Force status bar update after toggle
+        statusBarUI.update();
+      }
+    );
+
+    this.context.subscriptions.push(toggleMaskingCommand);
   }
 
   private registerCommand(id: string, callback: (...args: any[]) => any): void {
