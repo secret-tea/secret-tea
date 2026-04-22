@@ -59,12 +59,7 @@ export class ScanService {
     try {
       const output = await this.executor.executeWorkspace(workspacePath);
 
-      const findings = this.parser.parseWorkspaceScan(output).map(f => ({
-        ...f,
-        file: f.file.startsWith(workspacePath)
-          ? f.file.slice(workspacePath.length).replace(/^\//, '')
-          : f.file
-      }));
+      const findings = this.parser.parseWorkspaceScan(output);
 
       const duration = Date.now() - startTime;
       this.logger.info(`Workspace scan completed in ${duration}ms. Found ${findings.length} secrets`);
