@@ -27,7 +27,7 @@ export type ServiceIdentifier =
   | { name: 'scanService'; type: ScanService }
   | { name: 'malwareStore'; type: MalwareStore }
   | { name: 'malwareScannerService'; type: MalwareScannerService }
-  | { name: 'exportService'; type: ExportService };
+  | { name: 'exportService'; type: ExportService }
   | { name: 'malwareScannerService'; type: MalwareScannerService }
   | { name: 'maskingService'; type: MaskingService };
 

@@ -137,16 +137,10 @@ export class MaskingService {
         
         // Find ALL occurrences of the secret in the line (not just the first)
         if (finding.secret) {
-          let searchText = line.text;
-          let offset = 0;
+          let startChar = line.text.indexOf(finding.secret, 0);
           
           // Find all occurrences
-          while (offset < line.text.length) {
-            const index = searchText.indexOf(finding.secret);
-            
-            if (index === -1) break; // No more occurrences
-            
-            const startChar = offset + index;
+          while (startChar !== -1) {
             // Che đúng số lượng secret, không che 2x
             const endChar = startChar + secretLength;
             
@@ -163,8 +157,7 @@ export class MaskingService {
             });
                         
             // Continue searching after this occurrence
-            offset = endChar;
-            searchText = line.text.substring(endChar);
+            startChar = line.text.indexOf(finding.secret, endChar);
           }
         }
         
