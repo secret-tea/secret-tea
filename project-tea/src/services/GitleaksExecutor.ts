@@ -54,7 +54,7 @@ export class GitleaksExecutor implements IGitleaksExecutor {
     } catch (error: any) {
       // Gitleaks exits with non-zero code when it finds secrets
       // So we need to check if stdout exists before treating as error
-      if (error.stdout) {
+      if (error.stdout && error.stdout.trim() !== '') {
         const duration = Date.now() - startTime;
         this.logger.debug(`Scan completed with findings in ${duration}ms`);
 
@@ -69,8 +69,8 @@ export class GitleaksExecutor implements IGitleaksExecutor {
       const duration = Date.now() - startTime;
       this.logger.error(`Scan failed after ${duration}ms`, error);
 
-      // Check if it's a git repository error
-      if (error.message && error.message.toLowerCase().includes('not a git repository')) {
+      const errStr = String(error.message || '').toLowerCase() + String(error.stderr || '').toLowerCase();
+      if (errStr.includes('not a git repository') || errStr.includes('fatal: not a git repository')) {
         throw new GitRepositoryError(options.cwd || process.cwd());
       }
 
