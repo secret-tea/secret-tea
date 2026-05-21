@@ -1,10 +1,15 @@
 out
 dist
 node_modules
+.agents
+.kilocode
+.vscode
 .vscode-test/
-*.vsix
-executables
+coverage
+# executables
+integration-report
 kilocode
 memory-bank
-.kilocode
-.agents
+test-results.xml
+*.log
+*.vsix

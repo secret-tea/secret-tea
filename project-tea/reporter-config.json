@@ -1,0 +1,14 @@
+{
+  "reporterEnabled": "mocha-junit-reporter, mochawesome",
+  "mochaJunitReporterReporterOptions": {
+    "mochaFile": "test-results.xml"
+  },
+  "mochawesomeReporterOptions": {
+    "reportDir": "integration-report",
+    "reportFilename": "index",
+    "quiet": true,
+    "charts": true,
+    "consoleReporter": "spec",
+    "embeddedScreenshots": false
+  }
+}
