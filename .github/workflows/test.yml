@@ -1,0 +1,15 @@
+name: test project
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: node:24
+    defaults:
+      run:
+        working-directory: ./project-tea
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm i
+      - run: npm run test
+
