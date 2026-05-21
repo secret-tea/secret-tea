@@ -1,7 +1,10 @@
-name: test
-on: [push]
+name: deploy
+on:
+  push:
+    branches:
+      - main
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     container:
       image: node:24
@@ -11,5 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: npm i
-      - run: npm run test
-
+      - name: Publish
+        run: npm run deploy
+        env:
+          VSCE_PAT: ${{ secrets.PUBLISHER_KEY }}

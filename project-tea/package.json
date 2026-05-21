@@ -4,7 +4,7 @@
   "displayName": "Secret Tea",
   "publisher": "SecretTea",
   "description": "Scan your workspace for secrets!",
-  "version": "0.0.18",
+  "version": "0.0.20",
   "icon": "icon.png",
   "repository": {
     "type": "git",
@@ -106,7 +106,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "setup:sample": "bash scripts/setup-sample-workspace.sh",
-    "test:vscode": "npm run setup:sample && vscode-test"
+    "test:vscode": "npm run setup:sample && vscode-test",
+    "deploy": "vsce publish"
   },
   "devDependencies": {
     "@types/pdfkit": "0.17.5",
