@@ -1,0 +1,19 @@
+title = "Default ignore config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+  description = "Ignore generated/dependency directories"
+  paths = [
+    '''node_modules''',
+    '''\.next''',
+    '''\.nuxt''',
+    '''dist''',
+    '''build''',
+    '''out''',
+    '''\.output''',
+    '''\.turbo''',
+    '''\.cache''',
+    '''coverage''',
+  ]

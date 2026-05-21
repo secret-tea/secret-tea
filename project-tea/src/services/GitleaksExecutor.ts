@@ -86,13 +86,15 @@ export class GitleaksExecutor implements IGitleaksExecutor {
 
   private buildCommand(mode: 'file' | 'workspace' | 'history', targetPath: string): string {
     const baseFlags = '--log-level error --no-banner --no-color -v';
+    const configPath = path.join(path.dirname(this.executablePath), '.gitleaks.toml');
+    const configFlag = `-c "${configPath}"`;
 
     switch (mode) {
       case 'file':
-        return `"${this.executablePath}" detect ${baseFlags} --no-git --source "${targetPath}"`;
+        return `"${this.executablePath}" detect ${baseFlags} ${configFlag} --no-git --source "${targetPath}"`;
 
       case 'workspace':
-        return `"${this.executablePath}" detect ${baseFlags} --no-git --source "${targetPath}"`;
+        return `"${this.executablePath}" detect ${baseFlags} ${configFlag} --no-git --source "${targetPath}"`;
 
       case 'history':
         return `"${this.executablePath}" detect ${baseFlags}`;
