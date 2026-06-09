@@ -12,6 +12,7 @@ import { MaskingService } from '../services/MaskingService';
 import { MalwareScannerService } from '../services/MalwareScannerService';
 import { MalwareStore } from '../stores/MalwareStore';
 import { ExportService } from '../services/ExportService';
+import { ScanScheduler } from '../services/ScanScheduler';
 
 export type ServiceIdentifier =
   | { name: 'logger'; type: ILogger }
@@ -29,7 +30,8 @@ export type ServiceIdentifier =
   | { name: 'malwareScannerService'; type: MalwareScannerService }
   | { name: 'exportService'; type: ExportService }
   | { name: 'malwareScannerService'; type: MalwareScannerService }
-  | { name: 'maskingService'; type: MaskingService };
+  | { name: 'maskingService'; type: MaskingService }
+  | { name: 'scanScheduler'; type: ScanScheduler };
 
 export type ServiceType<T extends ServiceIdentifier['name']> = Extract<
   ServiceIdentifier,

@@ -16,6 +16,7 @@ import { ServiceRegistry } from './ServiceRegistry';
 import { MalwareScannerService } from '../services/MalwareScannerService';
 import { MalwareStore } from '../stores/MalwareStore';
 import { MaskingService } from '../services/MaskingService';
+import { ScanScheduler } from '../services/ScanScheduler';
 /**
  * Service container for dependency injection
  * Manages service lifecycle and provides centralized access to services
@@ -131,6 +132,12 @@ export class ServiceContainer {
          maskingService
        );
        this.registry.register('scanService', scanService);
+
+       // 12. Create scan scheduler
+       this.logger.debug('Initializing ScanScheduler...');
+       const scanScheduler = new ScanScheduler(scanService, this.logger);
+       this.registry.register('scanScheduler', scanScheduler);
+
       this.logSeparator();
       this.logger.info('All services initialized successfully');
       this.logSeparator();

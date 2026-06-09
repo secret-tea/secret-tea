@@ -4,7 +4,7 @@
   "displayName": "Secret Tea",
   "publisher": "SecretTea",
   "description": "Scan your workspace for secrets!",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "icon": "icon.png",
   "repository": {
     "type": "git",

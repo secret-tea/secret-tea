@@ -4,6 +4,7 @@ import { ScanService } from './services/ScanService';
 import { ILogger, ISidebarUI } from './services/interfaces';
 import { ErrorHandler } from './services/ErrorHandler';
 import { CommandManager } from './commands/CommandManager';
+import { ScanScheduler } from './services/ScanScheduler';
 
 let service: ServiceContainer;
 
@@ -17,6 +18,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		const logger = service.get<ILogger>('logger');
 		const scanService = service.get<ScanService>('scanService');
+		const scanScheduler = service.get<ScanScheduler>('scanScheduler');
 		const sidebarProvider = service.get<ISidebarUI>('sidebarProvider');
 		const malwareSidebarProvider = service.get<ISidebarUI>('malwareSidebarProvider');
 		const errorHandler = service.get<ErrorHandler>('errorHandler');
@@ -48,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		// Register Event Handlers
 		context.subscriptions.push(
 			vscode.workspace.onDidSaveTextDocument(async (document) => {
-				await handleDocumentSave(document, scanService, workspaceFolder, errorHandler);
+				await handleDocumentSave(document, scanScheduler, workspaceFolder, errorHandler);
 			})
 		);
 
@@ -68,7 +70,7 @@ export async function activate(context: vscode.ExtensionContext) {
  */
 async function handleDocumentSave(
 	document: vscode.TextDocument,
-	scanService: ScanService,
+	scanScheduler: ScanScheduler,
 	workspaceFolder: string,
 	errorHandler: ErrorHandler
 ): Promise<void> {
@@ -90,11 +92,11 @@ async function handleDocumentSave(
 	}
 
 	try {
-		// Scan only the saved file
-		await scanService.scanFile(filePath);
+		// Enqueue the file for scanning
+		scanScheduler.enqueueFile(filePath, workspaceFolder);
 	} catch (error) {
 		// Handle errors silently for file saves (no popup for every save)
-		errorHandler.handleSilent(error as Error, 'file save scan');
+		errorHandler.handleSilent(error as Error, 'file save scan enqueue');
 	}
 }
 
