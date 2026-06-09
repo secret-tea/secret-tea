@@ -7,6 +7,8 @@ useDefault = true
   description = "Ignore generated/dependency directories"
   paths = [
     '''node_modules''',
+    '''\.vscode/.*''',
+    '''\.vscode-test/.*''',
     '''\.next''',
     '''\.nuxt''',
     '''dist''',

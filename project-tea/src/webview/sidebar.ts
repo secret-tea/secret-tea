@@ -309,7 +309,7 @@ class SidebarController {
 
     const line = document.createElement('span');
     line.className = 'secret-line';
-    line.textContent = `Line ${finding.line}`;
+    line.textContent = `Line ${finding.line + 1}`;
 
     headerDiv.appendChild(icon);
     headerDiv.appendChild(rule);
