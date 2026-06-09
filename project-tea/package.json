@@ -4,7 +4,7 @@
   "displayName": "Secret Tea",
   "publisher": "SecretTea",
   "description": "Scan your workspace for secrets!",
-  "version": "0.0.20",
+  "version": "0.0.22",
   "icon": "icon.png",
   "repository": {
     "type": "git",
@@ -107,6 +107,9 @@
     "test:coverage": "jest --coverage",
     "setup:sample": "bash scripts/setup-sample-workspace.sh",
     "test:vscode": "npm run setup:sample && vscode-test",
+    "test:gitleaks": "jest src/test2/suite/gitleaks.test.ts --testMatch=\"**/*.test.ts\"",
+    "report:gitleaks": "npx tsx src/test2/report/generate-report.ts",
+    "test:with-report": "npm run test:gitleaks || true && npm run report:gitleaks",
     "deploy": "vsce publish"
   },
   "devDependencies": {
